@@ -11,6 +11,7 @@ from emporio_agent.data import load_store
 from emporio_agent.evals import (
     DEFAULT_SCENARIOS,
     TurnRecord,
+    check_conversation,
     check_turn,
     money_values,
     plain_numbers,
@@ -58,6 +59,23 @@ def test_amounts_from_earlier_turns_and_user_budget_are_grounded():
     assert failures(check_turn({}, turn, [earlier])) == []
 
 
+def test_punctuation_counts_so_percent_does_not_match_installments():
+    turn = record("Sai por R$ 2.199,00 ou 12x de R$ 183,25.", ["get_product"],
+                  ['{"preco":"R$ 2.199,00","parcelamento":"12x de R$ 183,25"}'])  # fmt: skip
+    assert failures(check_turn({"reply_none": ["12%"]}, turn, [])) == []
+    assert failures(check_turn({"reply_none": ["12x"]}, turn, []))
+
+
+def test_conversation_level_expectations_accept_any_turn():
+    first = record("Verificado e fora do prazo (24/02/2026).", ["verify_customer", "check_return"],
+                   ['{"verificado":true}', '{"elegivel":false}'])  # fmt: skip
+    second = record("Entendo, posso ajudar em algo mais?")
+    expect = {"tools": ["check_return"], "tool_output": ['"elegivel":false'],
+              "reply_any": ["24/02/2026"], "reply_none": ["devolução aprovada"]}  # fmt: skip
+    assert failures(check_conversation(expect, [first, second])) == []
+    assert failures(check_conversation({"tools": ["open_ticket"]}, [first, second]))
+
+
 def test_text_checks_ignore_accents_and_case():
     turn = record("A loja está FECHADA no feriado.")
     expect = {"reply_any": ["fechad"], "reply_none": ["aberta"], "no_tools": ["quote"]}
@@ -72,6 +90,7 @@ def test_scenarios_file_is_well_formed():
     allowed = {"tools", "no_tools", "tool_output", "reply_any", "reply_none"}
     for s in scenarios:
         assert s["turns"], s["id"]
+        assert set(s.get("expect", {})) <= allowed, s["id"]
         for turn in s["turns"]:
             assert turn["user"].strip()
             assert set(turn.get("expect", {})) <= allowed, s["id"]

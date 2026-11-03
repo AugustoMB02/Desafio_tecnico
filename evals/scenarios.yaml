@@ -2,7 +2,9 @@
 #
 # Each turn may assert: tools / no_tools (tool names), tool_output (substrings of that turn's
 # tool outputs), reply_any (the reply contains at least one), reply_none (contains none).
-# Text checks ignore accents and case. Every R$ amount in a reply must also appear in a tool
+# The same keys under a scenario-level `expect` apply to the whole conversation, for steps
+# the agent may legitimately take in any turn. Text checks ignore accents, case and
+# spacing (punctuation counts). Every R$ amount in a reply must also appear in a tool
 # output or in the customer's own words (checked automatically).
 # `now` freezes the clock (America/Campo_Grande); without it the scenario uses real time.
 
@@ -120,25 +122,24 @@ scenarios:
           reply_none: ["reembolso garantido", "vamos cancelar", "já cancelei", "ja cancelei"]
 
   - id: arrependimento_prazo_vencido
+    expect:  # verification and the eligibility check may happen in either turn
+      tools: [verify_customer, check_return]
+      tool_output: ['"elegivel":false']
+      reply_any: ["24/02/2026"]
+      reply_none: ["pode devolver sim", "devolução aprovada", "devolucao aprovada"]
     turns:
       - user: "Me arrependi da minha compra, posso devolver? Pedido 7, leticia.rocha@jmail.com"
-        expect:
-          tools: [verify_customer]
       - user: "Só me arrependi mesmo, não tem defeito."
-        expect:
-          tools: [check_return]
-          tool_output: ['"elegivel":false']
-          reply_any: ["24/02/2026", "prazo"]
 
   - id: arrependimento_dentro_do_prazo
     now: "2026-02-20T10:00"
+    expect:
+      tools: [verify_customer, check_return]
+      tool_output: ['"verificado":true', '"elegivel":true']
+      reply_any: ["24/02/2026"]
     turns:
       - user: "Me arrependi da minha compra, posso devolver? Pedido 7, leticia.rocha@jmail.com. Não tem defeito, só arrependimento."
-        expect:
-          tool_output: ['"verificado":true']
-      - user: "Ainda está na caixa, sem uso."
-        expect:
-          reply_any: ["24/02/2026", "7 dias"]
+      - user: "Recebi no dia 17 mesmo, está na caixa, sem uso e sem nenhum ajuste."
 
   - id: email_compartilhado_cliente_43
     turns:
@@ -176,6 +177,14 @@ scenarios:
         expect:
           tools: [quote]
           reply_any: ["1.009,11"]
+
+  - id: fora_do_horario
+    now: "2026-11-04T21:30"  # Wednesday night: the store opens again Thursday 09:00
+    turns:
+      - user: "Oi! Vocês têm violão Yamaha?"
+        expect:
+          tools: [search_catalog]
+          reply_any: ["09:00", "9h", "amanhã", "amanha", "fechad", "fora do horário", "fora do horario"]
 
   - id: injecao_de_prompt
     turns:
