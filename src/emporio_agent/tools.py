@@ -8,7 +8,7 @@ pre-formatted values.
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from typing import Annotated, Any
 
@@ -18,17 +18,20 @@ from langgraph.prebuilt import InjectedState
 from langgraph.types import Command
 from pydantic import BaseModel, Field
 
-from . import catalog, orders
+from . import catalog, orders, returns
 from .catalog import CategorySlug, PaymentMethod, StringsType
 from .clock import Clock, hours_on, store_status
-from .data import Store
+from .data import Order, Store
 from .policy import PolicyTopic, consult_policy
+from .returns import ReturnReason
+from .tickets import TicketKind, TicketStore
 
 
 @dataclass(frozen=True)
 class AgentContext:
     store: Store
     clock: Clock
+    tickets: TicketStore = field(default_factory=TicketStore)
 
 
 def to_json(payload: Any) -> str:
@@ -233,5 +236,78 @@ def order_tools(ctx: AgentContext) -> list[BaseTool]:
     return [verify_customer, get_my_orders]
 
 
+def service_tools(ctx: AgentContext) -> list[BaseTool]:
+    store = ctx.store
+
+    def own_order(state: dict[str, Any], order_id: int) -> Order | None:
+        cid = state.get("verified_customer_id")
+        found = orders.visible_orders(store, ctx.clock.today()).get(int(order_id))
+        return found if found and cid and found.customer_id == cid else None
+
+    @tool
+    def check_return(
+        state: Annotated[dict, InjectedState],
+        order_id: Annotated[int, "número do pedido do cliente verificado"],
+        reason: Annotated[ReturnReason, "arrependimento, defeito ou preferencia (cor/modelo)"],
+        received_on: Annotated[
+            str | None, "data em que o cliente recebeu, se ele informou (dd/mm/aaaa)"
+        ] = None,
+    ) -> str:
+        """Calcula se um pedido do cliente verificado pode ser devolvido ou trocado hoje,
+        aplicando os prazos do manual (7 dias arrependimento, 7 dias preferência, 30 dias
+        troca por defeito, 90 dias garantia legal) e o status do pedido. Use antes de
+        responder qualquer pedido de devolução, troca ou garantia."""
+        if not state.get("verified_customer_id"):
+            return to_json(NOT_VERIFIED)
+        order = own_order(state, order_id)
+        if order is None:
+            return to_json({"erro": "esse pedido não está entre os pedidos deste cliente"})
+        today = ctx.clock.today()
+        received = None
+        if received_on:
+            received = _parse_day(received_on, today)
+            if received is None:
+                return to_json({"erro": f"data não reconhecida: {received_on}"})
+        return to_json(returns.check_return(store, order, today, reason, received))
+
+    @tool
+    def open_ticket(
+        state: Annotated[dict, InjectedState],
+        kind: TicketKind,
+        summary: Annotated[str, "resumo do pedido do cliente, em uma ou duas frases"],
+        order_id: Annotated[int | None, "pedido relacionado (exige cliente verificado)"] = None,
+        contact: Annotated[
+            str | None, "telefone ou e-mail para retorno (se não verificado)"
+        ] = None,
+    ) -> str:
+        """Registra um chamado para a equipe humana e devolve o número de protocolo:
+        devolução, troca, garantia, cancelamento, reclamação, interesse em produto sem
+        estoque, pedido LGPD ou pedido de atendente. Só chame DEPOIS que o cliente confirmar
+        o resumo."""
+        cid = state.get("verified_customer_id")
+        if order_id is not None and own_order(state, order_id) is None:
+            return to_json({"erro": "para vincular um pedido, o cliente precisa estar verificado "
+                            "e o pedido precisa ser dele"})  # fmt: skip
+        if not cid and not (contact and contact.strip()):
+            return to_json({"erro": "peça um telefone ou e-mail para a equipe retornar"})
+        record = ctx.tickets.open(
+            kind=kind,
+            summary=summary,
+            now=ctx.clock.now(),
+            customer_id=cid,
+            order_id=order_id,
+            contact=contact,
+        )
+        retorno = (
+            "o responsável retorna em até 24 horas úteis"
+            if kind == "reclamacao"
+            else "a equipe entra em contato pelo canal do cliente (não há prazo definido "
+            "no manual: não prometa prazo)"
+        )
+        return to_json({"protocolo": record["protocolo"], "tipo": kind, "retorno": retorno})
+
+    return [check_return, open_ticket]
+
+
 def build_tools(ctx: AgentContext) -> list[BaseTool]:
-    return [*catalog_tools(ctx), *store_info_tools(ctx), *order_tools(ctx)]
+    return [*catalog_tools(ctx), *store_info_tools(ctx), *order_tools(ctx), *service_tools(ctx)]
