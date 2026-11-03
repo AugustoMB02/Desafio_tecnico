@@ -23,6 +23,7 @@ uv run emporio-agent [--trace] [--now 2026-02-20T10:00] [--export out.md]   # ch
 uv run emporio-agent --script examples/scripts/01_violoes_ate_1000.yaml \
     --export examples/01_violoes_ate_1000.md                 # regenerate one example
 uv run emporio-evals [--only <id>] [--report evals/report.md]  # scripted scenarios (paid calls)
+uv run emporio-evals evals/scenarios_dificeis.yaml --report evals/report_dificeis.md  # hard set
 
 python3 scripts/review_checks/check_numbers.py       # re-derive the numbers cited in the docs
 ```
