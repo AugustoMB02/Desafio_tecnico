@@ -1,0 +1,11 @@
+title: "Exemplo 4 — Status do pedido com e-mail compartilhado entre dois clientes"
+notes: >
+  O e-mail bruno.martins@jmail.com pertence a dois cadastros (clientes 11 e 43). A
+  verificação exige dois dados e confere a combinação inteira, então o e-mail sozinho não
+  basta e o telefone resolve para o cliente certo. O pedido 10 está confirmado há meses sem
+  envio: o agente pede desculpas e oferece um chamado em vez de prometer prazo.
+turns:
+  - "Boa tarde, queria saber do meu pedido. Meu e-mail é bruno.martins@jmail.com"
+  - "Meu telefone é (67) 98543-2109"
+  - "Nossa, tá demorando muito. Pode registrar uma reclamação?"
+  - "Pode sim, obrigado"

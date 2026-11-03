@@ -1,0 +1,10 @@
+title: "Exemplo 5 — Endereço, horário e uma categoria sem itens (saxofone)"
+notes: >
+  Informações gerais vindas do manual (endereço, contatos, horário com feriados) e uma
+  categoria que existe na loja mas está sem itens: o agente não trata como fora do escopo e
+  oferece registrar interesse.
+turns:
+  - "Qual o endereço da loja?"
+  - "E vocês abrem no dia 20 de novembro?"
+  - "Vocês têm saxofone?"
+  - "Quero sim, meu telefone é (67) 99111-2233"

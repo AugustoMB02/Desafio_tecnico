@@ -1,0 +1,10 @@
+title: "Exemplo 3 — \"Me arrependi da minha compra\" (relógio real)"
+notes: >
+  Aplicação da política de devolução com verificação de identidade (pedido + e-mail). Com o
+  relógio real, o prazo de arrependimento de 7 dias do pedido 7 (recebido em 17/02/2026) já
+  terminou, assim como a troca por defeito e a garantia legal; o agente explica e oferece o
+  caminho da garantia do fabricante. Veja o exemplo 3b para o mesmo pedido dentro do prazo.
+turns:
+  - "Me arrependi da minha compra, posso devolver meu pedido?"
+  - "É o pedido 7, meu e-mail é leticia.rocha@jmail.com"
+  - "Não é defeito não, só me arrependi mesmo."
