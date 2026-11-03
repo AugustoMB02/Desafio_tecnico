@@ -83,6 +83,21 @@ class Session:
         return turn
 
 
+def describe_error(exc: BaseException) -> str:
+    """One readable line for provider/network failures (quota, billing, timeouts)."""
+    text = " ".join(str(exc).split()) or type(exc).__name__
+    return _short(f"{type(exc).__name__}: {text}", 300)
+
+
+def safe_send(session: Session, text: str) -> Turn | None:
+    """Send a message; on a model/API failure, report it instead of crashing the chat."""
+    try:
+        return session.send(text)
+    except Exception as exc:  # e.g. quota exhausted, billing, network, provider outage
+        print(f"\n[erro ao chamar o modelo] {describe_error(exc)}\n", file=sys.stderr)
+        return None
+
+
 def _short(text: str, limit: int = 600) -> str:
     return text if len(text) <= limit else text[:limit] + " …"
 
@@ -183,7 +198,11 @@ def main(argv: list[str] | None = None) -> int:
     if script:
         for text in script["turns"]:
             print(f"Você: {text}")
-            print_turn(session.send(text), args.trace)
+            turn = safe_send(session, text)
+            if turn is None:
+                print("Roteiro interrompido; nada foi exportado.", file=sys.stderr)
+                return 1
+            print_turn(turn, args.trace)
     else:
         while True:
             try:
@@ -193,8 +212,8 @@ def main(argv: list[str] | None = None) -> int:
                 break
             if text.lower() in {"sair", "exit", "quit"}:
                 break
-            if text:
-                print_turn(session.send(text), args.trace)
+            if text and (turn := safe_send(session, text)) is not None:
+                print_turn(turn, args.trace)
 
     if args.export and session.turns:
         title = (script or {}).get("title", "Conversa com o agente da Empório da Música")

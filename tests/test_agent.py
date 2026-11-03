@@ -165,3 +165,23 @@ def test_example_scripts_parse():
     for path in scripts:
         data = load_script(path)
         assert data["title"] and all(isinstance(t, str) for t in data["turns"])
+
+
+def test_cli_script_aborts_without_export_on_model_error(tmp_path, monkeypatch, capsys):
+    from emporio_agent import cli
+    from emporio_agent.llm import ModelSpec
+
+    class Broken(type(scripted())):
+        def invoke(self, input, config=None, **kwargs):
+            raise RuntimeError("402 RESOURCE_EXHAUSTED. Your prepayment credits are depleted.")
+
+    model = Broken(messages=iter([]))
+    monkeypatch.setattr(cli, "load_model", lambda spec: (model, ModelSpec("fake:model", "fake")))
+    monkeypatch.setattr(cli, "TicketStore", lambda: None)
+    script = tmp_path / "s.yaml"
+    script.write_text('title: "x"\nturns:\n  - "oi"\n', encoding="utf-8")
+    out = tmp_path / "out.md"
+    assert cli.main(["--script", str(script), "--export", str(out)]) == 1
+    assert not out.exists()
+    err = capsys.readouterr().err
+    assert "RESOURCE_EXHAUSTED" in err and "nada foi exportado" in err
