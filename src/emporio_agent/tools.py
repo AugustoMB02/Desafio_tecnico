@@ -12,10 +12,13 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Annotated, Any
 
-from langchain_core.tools import BaseTool, tool
+from langchain_core.messages import AIMessage, ToolMessage
+from langchain_core.tools import BaseTool, InjectedToolCallId, tool
+from langgraph.prebuilt import InjectedState
+from langgraph.types import Command
 from pydantic import BaseModel, Field
 
-from . import catalog
+from . import catalog, orders
 from .catalog import CategorySlug, PaymentMethod, StringsType
 from .clock import Clock, hours_on, store_status
 from .data import Store
@@ -149,5 +152,86 @@ def store_info_tools(ctx: AgentContext) -> list[BaseTool]:
     return [consult_policy_tool, check_store_hours]
 
 
+NOT_VERIFIED = {
+    "erro": "cliente não verificado: use verify_customer com dois dados (pedido, e-mail, "
+    "telefone) antes de consultar pedidos"
+}
+
+
+def _reply(tool_call_id: str, payload: Any, **update: Any) -> Command:
+    message = ToolMessage(to_json(payload), tool_call_id=tool_call_id)
+    return Command(update={**update, "messages": [message]})
+
+
+def _is_first_call(state: dict[str, Any], tool_name: str, tool_call_id: str) -> bool:
+    """Whether this is the first call to `tool_name` in the model's latest message."""
+    last_ai = next((m for m in reversed(state["messages"]) if isinstance(m, AIMessage)), None)
+    if last_ai is None:
+        return True
+    ids = [c["id"] for c in last_ai.tool_calls if c["name"] == tool_name]
+    return not ids or ids[0] == tool_call_id
+
+
+def order_tools(ctx: AgentContext) -> list[BaseTool]:
+    store = ctx.store
+
+    @tool
+    def verify_customer(
+        state: Annotated[dict, InjectedState],
+        tool_call_id: Annotated[str, InjectedToolCallId],
+        order_id: Annotated[int | None, "número do pedido"] = None,
+        email: Annotated[str | None, "e-mail do cliente"] = None,
+        phone: Annotated[str | None, "telefone do cliente, com DDD"] = None,
+    ) -> Command:
+        """Verifica a identidade do cliente com DOIS destes dados: número do pedido, e-mail,
+        telefone. Obrigatório antes de mostrar qualquer pedido. Se der certo, já devolve os
+        pedidos do cliente. Nunca diga qual dado estava errado. Bloqueia após 3 falhas."""
+        today = ctx.clock.today()
+        failures = state.get("verification_failures", 0)
+        if failures >= orders.MAX_VERIFICATION_ATTEMPTS:
+            return _reply(tool_call_id, {"erro": "verificação bloqueada nesta conversa após 3 "
+                          "tentativas; ofereça atendimento humano (open_ticket)"})  # fmt: skip
+        if not _is_first_call(state, "verify_customer", tool_call_id):
+            return _reply(tool_call_id, {"erro": "uma verificação por vez; aguarde o resultado"})
+        result = orders.verify(store, today, order_id=order_id, email=email, phone=phone)
+        if result.error:
+            return _reply(tool_call_id, {"erro": result.error})
+        if not result.ok:
+            left = orders.MAX_VERIFICATION_ATTEMPTS - failures - 1
+            payload = {"verificado": False, "mensagem": orders.GENERIC_FAILURE,
+                       "tentativas_restantes": left}  # fmt: skip
+            return _reply(tool_call_id, payload, verification_failures=1)
+        customer = result.customer
+        assert customer is not None
+        found = orders.customer_orders(store, customer.customer_id, today)
+        payload = {
+            "verificado": True,
+            "primeiro_nome": customer.first_name,
+            "pedidos": [orders.order_summary(store, o, today) for o in found]
+            or "nenhum pedido encontrado para este cliente",
+        }
+        return _reply(tool_call_id, payload, verified_customer_id=customer.customer_id)
+
+    @tool
+    def get_my_orders(
+        state: Annotated[dict, InjectedState],
+        order_id: Annotated[int | None, "um pedido específico; vazio = todos"] = None,
+    ) -> str:
+        """Pedidos do cliente JÁ VERIFICADO nesta conversa: status, itens, valor pago,
+        rastreio, previsão de entrega e alertas (atraso, pedido parado)."""
+        cid = state.get("verified_customer_id")
+        if not cid:
+            return to_json(NOT_VERIFIED)
+        today = ctx.clock.today()
+        found = orders.customer_orders(store, cid, today)
+        if order_id is not None:
+            found = [o for o in found if o.order_id == int(order_id)]
+            if not found:
+                return to_json({"erro": "esse pedido não está entre os pedidos deste cliente"})
+        return to_json({"pedidos": [orders.order_summary(store, o, today) for o in found]})
+
+    return [verify_customer, get_my_orders]
+
+
 def build_tools(ctx: AgentContext) -> list[BaseTool]:
-    return [*catalog_tools(ctx), *store_info_tools(ctx)]
+    return [*catalog_tools(ctx), *store_info_tools(ctx), *order_tools(ctx)]

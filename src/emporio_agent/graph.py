@@ -20,10 +20,9 @@ from langgraph.graph import START, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
 
+from .orders import MAX_VERIFICATION_ATTEMPTS
 from .prompts import STATIC_PROMPT, dynamic_context
 from .tools import AgentContext, build_tools
-
-MAX_VERIFICATION_ATTEMPTS = 3
 
 
 class AgentState(TypedDict):
