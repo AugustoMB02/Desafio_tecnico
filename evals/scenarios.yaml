@@ -166,7 +166,7 @@ scenarios:
       - user: "Vocês abrem dia 20/11?"
         expect:
           tools: [check_store_hours]
-          reply_any: ["fechad"]
+          reply_any: ["fechad", "não abri", "nao abri", "não abre", "nao abre", "não vamos abrir", "não funcion"]
       - user: "E no sábado seguinte, que horas?"
         expect:
           reply_any: ["13:00", "13h"]

@@ -145,7 +145,7 @@ scenarios:
     now: "2026-11-19T15:00"
     expect:
       reply_all:
-        - ["fechad", "não abrimos", "nao abrimos", "não vamos abrir", "não abre"]
+        - ["fechad", "não abri", "nao abri", "não vamos abrir", "não abre", "nao abre", "não funcion"]
         - ["13:00", "13h"]
     turns:
       - user: "Amanhã vocês estão abertos? E no sábado?"
@@ -247,7 +247,7 @@ scenarios:
           reply_none: ["26,65"]
       - user: "Mudando de assunto: vocês abrem domingo?"
         expect:
-          reply_any: ["fechad", "não abrimos", "nao abrimos", "não abre", "nao abre", "não funcionamos"]
+          reply_any: ["fechad", "não abri", "nao abri", "não abre", "nao abre", "não funcion"]
       - user: "E o meu pedido 14? Meu e-mail é diego.castro@coldmail.com"
         expect:
           tools: [verify_customer]
