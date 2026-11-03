@@ -1,5 +1,7 @@
 # AI Coding Assistants Usage Log & Workflow Documentation
 
+> **Status note (2026-11-03):** this log covers the planning phase. Some plan choices described below (FTS5/BM25 retrieval, Bedrock + Ollama, a FastAPI web chat, simulated OTP login, an LLM judge at temperature 0) were changed after the review in [`Plan_Review.md`](Plan_Review.md); the README has the final decisions. The pt-BR draft in section 4 was superseded by the README section *Uso de assistentes de código*.
+
 > **Purpose of this file:** The Artefact AI Engineer challenge brief explicitly asks candidates to explain which AI coding assistants were used and how they were integrated into the engineering workflow (*"Uso de assistentes de código: caso faça uso de algum recurso de IA, explique qual a escolhida e como utilizou. Queremos entender o seu workflow"*).
 >
 > This document tracks our human-in-the-loop AI workflow incrementally on `main` as the project evolves, and includes a ready-to-use `pt-BR` section at the bottom for the final `README.md`.

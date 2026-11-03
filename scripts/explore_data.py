@@ -4,7 +4,8 @@ import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
-DATA_DIR = Path("/home/augusto/Desktop/Desafio_tecnico")
+# Raw inputs currently live at the repository root. If they move to data/, append / "data".
+DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 
 def load_csv(name):
     path = DATA_DIR / f"desafio_tecnico_ai_eng - {name}.csv"

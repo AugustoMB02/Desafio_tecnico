@@ -1,0 +1,10 @@
+title: "Exemplo 1 — Violões até R$ 1.000 e parcelamento"
+notes: >
+  Consulta ao catálogo em tempo real: só itens ativos e com estoque (o Giannini GF-3D, sem
+  estoque, e o Shelby SN-7C, descontinuado, ficam de fora), refinamento por tipo de corda,
+  parcelamento pelas faixas da seção 3.1 e frete de Campo Grande.
+turns:
+  - "Oi! Quais opções de violões disponíveis custando até R$1000?"
+  - "Sou iniciante, prefiro corda de nylon"
+  - "Gostei do Yamaha C40. Em quantas vezes posso pagar? E no PIX fica quanto?"
+  - "Moro em Campo Grande, o frete é grátis?"

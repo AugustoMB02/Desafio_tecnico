@@ -1,0 +1,9 @@
+title: "Exemplo 2 — Preço do Takamine GD20, promoção encerrada e acessórios"
+notes: >
+  Consulta de preço com regra de promoção (seção 7.3: a promoção de 12% está encerrada no
+  sistema, então o agente informa com transparência e não aplica o desconto) e pedido de
+  acessórios fora do escopo da loja (seção 1), sem indicar loja parceira.
+turns:
+  - "Quanto custa o Takamine GD20?"
+  - "Mas eu vi que ele tava com 12% de desconto, ainda tá valendo?"
+  - "Entendi. Aproveitando, vocês vendem as cordas e um amplificador pra ele?"
