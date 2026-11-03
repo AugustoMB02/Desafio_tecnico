@@ -7,6 +7,7 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "gradio>=6.31.0",
     "holidays>=0.108",
     "langchain>=1.4.8",
     "langchain-anthropic>=1.7.9",
@@ -20,6 +21,7 @@ dependencies = [
 [project.scripts]
 emporio-agent = "emporio_agent.cli:main"
 emporio-evals = "emporio_agent.evals:main"
+emporio-web = "emporio_agent.web:main"
 
 [build-system]
 requires = ["uv_build>=0.11.32,<0.12.0"]

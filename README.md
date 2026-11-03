@@ -31,6 +31,7 @@ cp .env.example .env          # e preencha UMA das opções (formato provider:mo
 #   MODEL_EFFORT=low                     (opcional, só Claude: menos "pensamento", mais rápido)
 
 uv run emporio-agent          # conversa no terminal ("sair" encerra)
+uv run emporio-web            # o mesmo agente num chat web: http://127.0.0.1:7860
 ```
 
 Opções do CLI:
@@ -46,6 +47,10 @@ Opções do CLI:
 **Outros provedores.** O modelo é carregado com `init_chat_model` do LangChain, então basta trocar `MODEL` e instalar o pacote do provedor, por exemplo `uv add langchain-openai` e `MODEL=openai:<modelo>`, ou `uv add langchain-ollama` e `MODEL=ollama:qwen3:8b` para rodar local. Os pacotes do Gemini (`langchain-google-genai`) e do Claude (`langchain-anthropic`) já vêm instalados; os exemplos e os cenários foram rodados com o Gemini.
 
 Sem `MODEL` configurado o CLI para com uma mensagem clara (não existe modelo padrão escondido no código).
+
+**Chat web (opcional).** `uv run emporio-web` abre o mesmo agente no navegador, em Python puro (Gradio): cada aba é uma conversa, e as ferramentas consultadas aparecem como passos recolhíveis acima da resposta (`--hide-tools` mostra só o texto para o cliente; `--now` e `--model` funcionam como no CLI).
+
+![Chat web da Empório da Música respondendo o preço do Takamine GD20, com a chamada get_product visível](docs/web-ui.png)
 
 **Comandos de desenvolvimento:**
 
@@ -151,9 +156,11 @@ Alternativa considerada: colocar o manual inteiro no prompt (cabe folgado e fica
 - **Estático primeiro, dinâmico por último:** data/hora, se a loja está aberta, feriado e status da verificação entram no fim, para não invalidar o cache a cada mensagem.
 - As ferramentas carregam instruções nos próprios dados quando isso é mais confiável que o prompt: `promocoes_encerradas` vem com "só mencione se o cliente perguntar", `alerta_dados` diz para não afirmar a marca da descrição, `categoria_sem_itens` diz que não é fora do escopo.
 
-### Interface: CLI
+### Interface: CLI (e um chat web opcional)
 
 O enunciado diz que o foco é o agente funcionando. O CLI tem `--trace` (mostra as ferramentas), `--now` (relógio congelado para demonstrações) e exporta a conversa em Markdown **com as chamadas de ferramenta**, que é o que gera os exemplos. Uma UI web ficou para depois (ver próximos passos).
+
+Depois de o agente estar pronto, acrescentei um chat web em Python puro (Gradio, `uv run emporio-web`) para quem quiser testar sem terminal. Ele reaproveita a mesma sessão do CLI (mesmo grafo, ferramentas e regras) e mostra as ferramentas consultadas em passos recolhíveis — o "modo avaliador" do plano original, sem HTML/JS próprio. O preço é uma dependência pesada (o Gradio traz FastAPI, uvicorn e outros pacotes).
 
 ### Persistência do histórico
 
@@ -217,7 +224,7 @@ Onde o enunciado ou o manual são ambíguos, assumi (e o código cita a suposiç
 
 **Com mais tempo**
 1. Rodar os cenários várias vezes e com outros modelos (Claude Haiku/Sonnet, Gemini Pro) para medir taxa de acerto (pass^k) e latência, e ajustar o prompt pelos erros.
-2. UI web em Python puro (Chainlit ou Gradio) mostrando as ferramentas chamadas.
+2. Levar o chat web para o canal real (WhatsApp Business), com o número do remetente como identificador da conversa.
 3. Persistência com `SqliteSaver` e política de retenção; integração com o WhatsApp Business (o número do remetente como fator de verificação).
 4. Chamados num sistema real (helpdesk) e notificação da equipe.
 5. LLM como juiz só para tom/empatia, validado contra conversas rotuladas à mão, com um modelo diferente do agente.
