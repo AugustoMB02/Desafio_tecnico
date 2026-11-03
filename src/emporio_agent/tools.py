@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, timedelta
 from typing import Annotated, Any
 
 from langchain_core.messages import AIMessage, ToolMessage
@@ -143,9 +143,17 @@ def store_info_tools(ctx: AgentContext) -> list[BaseTool]:
         result: dict[str, Any] = {"agora": store_status(now).describe()}
         if day:
             parsed = _parse_day(day, now.date())
-            result["dia_consultado"] = (
-                hours_on(parsed).describe() if parsed else f"data não reconhecida: {day}"
-            )
+            if parsed is None:
+                result["dia_consultado"] = f"data não reconhecida: {day}"
+            else:
+                asked = hours_on(parsed)
+                result["dia_consultado"] = asked.describe()
+                if not asked.is_open_day:
+                    for offset in range(1, 15):
+                        nxt = hours_on(parsed + timedelta(days=offset))
+                        if nxt.is_open_day:
+                            result["proxima_abertura"] = nxt.describe()
+                            break
         else:
             result["proximos_dias"] = [
                 hours_on(date.fromordinal(now.date().toordinal() + i)).describe() for i in range(7)

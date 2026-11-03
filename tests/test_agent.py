@@ -185,3 +185,23 @@ def test_cli_script_aborts_without_export_on_model_error(tmp_path, monkeypatch, 
     assert not out.exists()
     err = capsys.readouterr().err
     assert "RESOURCE_EXHAUSTED" in err and "nada foi exportado" in err
+
+
+def test_closed_day_reports_next_opening(ctx):
+    model = scripted(ai("", call("check_store_hours", day="20/11/2026")), ai("Fechado."))
+    [hours] = tool_messages(run(ctx, model, "Abrem dia 20/11?"))
+    payload = json.loads(hours.content)
+    assert "Consciência Negra" in payload["dia_consultado"]
+    assert payload["proxima_abertura"] == "sábado, 21/11/2026: aberto das 09:00 às 13:00"
+
+
+def test_search_results_carry_description_or_data_alert(ctx):
+    model = scripted(
+        ai("", call("search_catalog", "s1", category="violoes", max_price_brl=500)),
+        ai("", call("search_catalog", "s2", category="baixos")),
+        ai("Ok."),
+    )
+    violoes, baixos = (json.loads(m.content) for m in tool_messages(run(ctx, model, "oi")))
+    assert all(item["descricao"] for item in violoes["itens"])
+    flagged = {item["id"]: item for item in baixos["itens"]}
+    assert "alerta_dados" in flagged[135] and "descricao" not in flagged[135]

@@ -84,6 +84,10 @@ def product_summary(store: Store, product: Product) -> dict[str, Any]:
         summary["cordas"] = strings
     if product.has_electronics is not None:
         summary["eletroacustico"] = product.has_electronics
+    if rules.data_quality_issues(product):
+        summary["alerta_dados"] = "cadastro inconsistente: não descreva marca, modelo ou specs"
+    else:
+        summary["descricao"] = product.description
     summary.update(price_info(store, product))
     return summary
 
