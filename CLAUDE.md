@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-This repo holds a take-home challenge (Artefact, AI Engineer). Right now it contains only the inputs: CSVs, two PDFs and a stub README. No code, dependencies, build, lint or test setup exists yet. When you add tooling, put its commands in this file.
+This repo holds a take-home challenge (Artefact, AI Engineer). It contains the inputs (CSVs, two PDFs), the original plan (`PLAN.md`), a verified review of that plan (`Plan_Review.md`), standard-library analysis scripts under `scripts/`, and `HANDOFF.md`, which records the current state, the decision defaults and the next steps. **Read `HANDOFF.md` first.** No application code, dependencies, build, lint or test setup exists yet. When you add tooling, put its commands in this file.
 
 The full brief is in `desafio_tecnico_ai_eng_artefact.pdf`. Read it with `pdftotext -layout <file> -`. Everything in the brief and the data is in Portuguese (pt-BR), and the agent must answer customers in Portuguese.
 
