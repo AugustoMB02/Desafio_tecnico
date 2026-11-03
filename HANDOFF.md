@@ -88,10 +88,12 @@ The user hasn't chosen between the plan and the review. Implement these defaults
 
 ## 4. Current state
 
-- **Works:** `scripts/explore_data.py` and both `scripts/review_checks/` scripts run with plain Python 3 from any working directory (standard library only; the probe also needs `pdftotext`). They were run in a fresh clone of this branch before handoff.
-- **Doesn't exist yet:** `pyproject.toml`, application code, tests, `examples/`, the real README.
-- **Inputs:** still at the repository root, not yet moved to `data/`.
-- **Broken or half-done:** nothing.
+*Updated 2026-11-03 by the cloud session, on branch `claude/emporio-agent-handoff-5gfkz8`.*
+
+- **Done:** steps 2–6, 8, 9, 11, 12 and 13 of §5. The inputs are in `data/`; the uv project, domain rules, curated policies, clock, LangGraph agent with 9 tools, CLI, verification/orders, returns/tickets, scenario runner (23 scenarios), pt-BR README and `CLAUDE.md` commands are committed. `uv run pytest` passes 148 tests and ruff is clean.
+- **Verified offline only:** the real `ChatAnthropic` request payload (tool schemas, cached system block, no `temperature`, `effort` → `output_config`) was built without a network call.
+- **Blocked (no LLM key in the cloud container; its AWS keys are proxy placeholders that AWS rejects):** steps 7 and 10 (generate `examples/*.md` from `examples/scripts/*.yaml`) and any live `emporio-evals` run. The README marks the examples as pending.
+- **Broken or half-done:** nothing known; the agent has never been run against a live model, so expect prompt tuning after the first runs.
 
 ---
 
