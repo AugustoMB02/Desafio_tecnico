@@ -16,7 +16,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-DEFAULT_PDF = Path(__file__).resolve().parents[2] / "políticas_da_loja.pdf"
+DEFAULT_PDF = Path(__file__).resolve().parents[2] / "data" / "políticas_da_loja.pdf"
 pdf = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_PDF
 
 try:

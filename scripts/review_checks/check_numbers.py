@@ -15,7 +15,7 @@ import sys
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
-DEFAULT_DATA_DIR = Path(__file__).resolve().parents[2]
+DEFAULT_DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 DATA_DIR = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_DATA_DIR
 PREFIX = "desafio_tecnico_ai_eng - "
 
