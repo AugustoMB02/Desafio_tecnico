@@ -216,7 +216,7 @@ Onde o enunciado ou o manual são ambíguos, assumi (e o código cita a suposiç
 - A verificação conversacional é fraca por natureza (e-mail e número de pedido são semi-públicos); o limite de tentativas reduz, não elimina, o risco.
 
 **Com mais tempo**
-1. Gerar os exemplos, rodar os cenários algumas vezes por modelo (Haiku × Sonnet) e medir taxa de acerto e latência; ajustar o prompt pelos erros.
+1. Rodar os cenários várias vezes e com outros modelos (Claude Haiku/Sonnet, Gemini Pro) para medir taxa de acerto (pass^k) e latência, e ajustar o prompt pelos erros.
 2. UI web em Python puro (Chainlit ou Gradio) mostrando as ferramentas chamadas.
 3. Persistência com `SqliteSaver` e política de retenção; integração com o WhatsApp Business (o número do remetente como fator de verificação).
 4. Chamados num sistema real (helpdesk) e notificação da equipe.
@@ -231,6 +231,7 @@ Usei o **Claude Code** em todas as etapas, sempre com a decisão final minha:
 2. **Plano:** a partir da EDA, montamos o [`PLAN.md`](PLAN.md) (arquitetura, ferramentas, avaliação, commits).
 3. **Revisão adversarial:** pedi ao Claude Code para atacar o próprio plano, com cada número reproduzido por script. O resultado é o [`Plan_Review.md`](Plan_Review.md), com os scripts em [`scripts/review_checks/`](scripts/review_checks). Ela encontrou problemas reais: IDs de modelo aposentados, `temperature=0` rejeitado pelos modelos atuais, a busca FTS5 que não achava a pergunta do enunciado, o centavo de diferença entre `float` e `Decimal`, o relógio que exporia pedidos "do futuro" e uma corrida entre chamadas paralelas no LangGraph.
 4. **Implementação:** feita pelo Claude Code numa sessão na nuvem, em commits pequenos, a partir de um documento de passagem ([`HANDOFF.md`](HANDOFF.md)) com as decisões e a ordem de trabalho. Cada regra veio com testes fixados em valores conferidos à mão, e os comportamentos do LangGraph foram confirmados num *spike* antes de o código depender deles.
+5. **Primeiras conversas reais e correções:** as primeiras transcrições com o Gemini mostraram três problemas que os testes com modelo falso não pegam: o modelo inventava detalhes de produto (ex.: "tarraxas douradas" num violão cuja descrição não diz isso), afirmava a previsão de entrega como data de recebimento e, depois de um feriado, dizia vagamente que a loja "volta ao normal no dia seguinte". A correção foi nas ferramentas e no prompt — a busca passou a trazer a descrição do catálogo, o prompt limita afirmações de produto ao que as ferramentas devolvem e exige confirmar a data de recebimento, e o horário de um dia fechado passou a informar a próxima abertura (commit `2d65a27`) — e os exemplos foram gerados de novo.
 
 **Pontos da revisão que aceitei:** modelos atuais sem `temperature`; consulta de políticas por tópico em vez de FTS5; orçamento por id de produto com `Decimal`; relógio injetável que esconde registros futuros; verificação conversacional única com limite de tentativas (sem OTP simulado, que mostraria o código na tela); verificação devolvendo os pedidos; CLI primeiro; as suposições extras; os cenários de teste.
 
