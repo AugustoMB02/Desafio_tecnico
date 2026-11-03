@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-This repo holds a take-home challenge (Artefact, AI Engineer). It contains the inputs under `data/` (CSVs, two PDFs), the original plan (`PLAN.md`), a verified review of that plan (`Plan_Review.md`), standard-library analysis scripts under `scripts/`, and `HANDOFF.md`, which records the current state, the decision defaults and the next steps. **Read `HANDOFF.md` first.**
+This repo holds a take-home challenge (Artefact, AI Engineer): a LangGraph customer-service agent for a fictional instrument store. The inputs are under `data/` (CSVs, two PDFs, plus the curated `data/policies.md`). `PLAN.md` is the original plan, `Plan_Review.md` a verified review of it, and `HANDOFF.md` the decision defaults and step list the implementation followed. `README.md` (pt-BR) is the deliverable documentation; keep it in sync with the code.
 
 The full brief is in `data/desafio_tecnico_ai_eng_artefact.pdf`. Read it with `pdftotext -layout <file> -`. Everything in the brief and the data is in Portuguese (pt-BR), and the agent must answer customers in Portuguese.
 
@@ -13,13 +13,32 @@ The full brief is in `data/desafio_tecnico_ai_eng_artefact.pdf`. Read it with `p
 Python 3.12 via `uv` (`.python-version`), package layout `src/emporio_agent/`, tests in `tests/`.
 
 ```bash
-uv sync                        # install (locked in uv.lock)
-uv run pytest                  # unit tests (no LLM calls)
-uv run pytest tests/test_x.py::test_name   # a single test
-uv run ruff check . && uv run ruff format --check .   # lint + format check (scripts/ excluded)
-uv run emporio-agent           # CLI entry point
+uv sync                                    # install (locked in uv.lock)
+uv run pytest                              # unit tests, no LLM calls (fake chat model)
+uv run pytest tests/test_domain.py::test_max_installments   # a single test
+uv run ruff check . && uv run ruff format --check .        # lint + format (scripts/ excluded)
+
+# Need MODEL=provider:model and the provider key (e.g. ANTHROPIC_API_KEY), env or .env:
+uv run emporio-agent [--trace] [--now 2026-02-20T10:00] [--export out.md]   # chat CLI
+uv run emporio-agent --script examples/scripts/01_violoes_ate_1000.yaml \
+    --export examples/01_violoes_ate_1000.md                 # regenerate one example
+uv run emporio-evals [--only <id>] [--report evals/report.md]  # scripted scenarios (paid calls)
+
 python3 scripts/review_checks/check_numbers.py       # re-derive the numbers cited in the docs
 ```
+
+## Architecture
+
+- `data.py` loads the CSVs once into frozen dataclasses (`Store`); no database.
+- `rules.py` holds every business rule (availability, prices/PIX, §3.1 installments, shipping, alternatives, data-quality flags, name lookup). `money.py`: `Decimal`, ROUND_HALF_UP per line, `fmt_brl()`.
+- `catalog.py`, `orders.py`, `returns.py`, `policy.py`, `clock.py`, `tickets.py` are pure services returning pre-formatted pt-BR dicts.
+- `tools.py` wraps them as LangChain tools over an `AgentContext(store, clock, tickets)`. Tools take ids, never model-typed prices.
+- `graph.py`: `StateGraph` (agent node + `ToolNode`). State = messages, `verified_customer_id` (written only by `verify_customer` via `Command`, read via `InjectedState`), `verification_failures` (summed reducer). `verify_customer` returns the orders itself because parallel tool calls see pre-step state.
+- `prompts.py`: static pt-BR persona prompt first (cached on Anthropic), dynamic context last.
+- `llm.py`: `init_chat_model(MODEL)`; no default model, no `temperature` (Claude 5.x rejects it).
+- `cli.py` / `evals.py`: chat CLI with transcript export; scenario runner over `evals/scenarios.yaml`.
+
+Conventions: money always `Decimal`; dates `dd/mm/aaaa`; timezone `America/Campo_Grande`; assumptions are marked `ASSUMPTION` in code and listed in the README. `.state/` (tickets) is gitignored because it may hold customer contacts.
 
 ## The task
 
