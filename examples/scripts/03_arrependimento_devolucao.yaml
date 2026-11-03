@@ -1,10 +1,13 @@
-title: "Exemplo 3b — Devolução dentro do prazo (data simulada em 20/02/2026)"
+title: "Exemplo 3 — \"Me arrependi da minha compra\" (devolução dentro do prazo)"
 now: "2026-02-20T10:00:00-04:00"
 notes: >
-  Mesmo pedido do exemplo 3, com o relógio congelado em 20/02/2026 (terceiro dia após o
-  recebimento). Registros posteriores a essa data ficam ocultos. O agente aplica a seção 4.1,
-  lista as condições e abre o chamado de devolução depois da confirmação.
+  Aplicação da política de devolução (seção 4.1) com verificação de identidade (pedido +
+  e-mail). Os pedidos da base são de out/2025 a mar/2026, então com o relógio real todo prazo
+  de 7 dias já venceu (o agente explica isso e oferece o caminho da garantia; o cenário
+  `arrependimento_prazo_vencido` em evals/ cobre esse caso). Para mostrar a regra aplicada a
+  um pedido dentro do prazo, o relógio foi congelado em 20/02/2026 (terceiro dia após o
+  recebimento do pedido 7); registros posteriores a essa data ficam ocultos.
 turns:
   - "Me arrependi da minha compra, posso devolver meu pedido?"
   - "Pedido 7, e-mail leticia.rocha@jmail.com. Só me arrependi, ainda tá na caixa."
-  - "Pode abrir sim, por favor."
+  - "Recebi no dia 17 mesmo, e não fiz nenhum ajuste nem comprei em liquidação. Pode abrir a devolução, por favor."
