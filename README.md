@@ -25,10 +25,10 @@ O agente conversa em português no tom da loja ("um amigo que entende de música
 git clone https://github.com/AugustoMB02/Desafio_tecnico && cd Desafio_tecnico
 uv sync                       # cria o .venv e instala as dependências travadas em uv.lock
 
-cp .env.example .env          # e preencha:
-#   MODEL=anthropic:claude-sonnet-5-5     (formato provider:modelo)
-#   ANTHROPIC_API_KEY=...
-#   MODEL_EFFORT=low                      (opcional, só Claude: menos "pensamento", mais rápido)
+cp .env.example .env          # e preencha UMA das opções (formato provider:modelo):
+#   MODEL=google_genai:gemini-3.5-flash  +  GOOGLE_API_KEY=...     (usado nos exemplos)
+#   MODEL=anthropic:claude-sonnet-5-5    +  ANTHROPIC_API_KEY=...
+#   MODEL_EFFORT=low                     (opcional, só Claude: menos "pensamento", mais rápido)
 
 uv run emporio-agent          # conversa no terminal ("sair" encerra)
 ```
@@ -43,14 +43,14 @@ Opções do CLI:
 | `--export conversa.md` | salva a conversa em Markdown, incluindo as ferramentas consultadas |
 | `--model provider:modelo` | sobrescreve `MODEL` |
 
-**Outros provedores.** O modelo é carregado com `init_chat_model` do LangChain, então basta trocar `MODEL` e instalar o pacote do provedor, por exemplo `uv add langchain-openai` e `MODEL=openai:<modelo>`, ou `uv add langchain-ollama` e `MODEL=ollama:qwen3:8b` para rodar local. Só o caminho Anthropic vem instalado e foi o alvo dos testes de integração.
+**Outros provedores.** O modelo é carregado com `init_chat_model` do LangChain, então basta trocar `MODEL` e instalar o pacote do provedor, por exemplo `uv add langchain-openai` e `MODEL=openai:<modelo>`, ou `uv add langchain-ollama` e `MODEL=ollama:qwen3:8b` para rodar local. Os pacotes do Gemini (`langchain-google-genai`) e do Claude (`langchain-anthropic`) já vêm instalados; os exemplos e os cenários foram rodados com o Gemini.
 
 Sem `MODEL` configurado o CLI para com uma mensagem clara (não existe modelo padrão escondido no código).
 
 **Comandos de desenvolvimento:**
 
 ```bash
-uv run pytest                             # 148 testes, nenhum chama LLM
+uv run pytest                             # 151 testes, nenhum chama LLM
 uv run ruff check . && uv run ruff format --check .
 uv run emporio-evals --report evals/report.md   # cenários com o modelo real (gasta API)
 ```
@@ -65,16 +65,17 @@ for f in examples/scripts/*.yaml; do
 done
 ```
 
-| Arquivo | Cenário | O que demonstra |
+| Conversa | Cenário | O que demonstra |
 |---|---|---|
-| `01_violoes_ate_1000` | "Quais opções de violões disponíveis custando até R$1000?" | busca com filtro de disponibilidade, refinamento (nylon), parcelamento pela seção 3.1, PIX, frete de Campo Grande |
-| `02_takamine_promocao_acessorios` | "Quanto custa o Takamine GD20?" | preço, promoção encerrada tratada com transparência (7.3), recusa de cordas e amplificador sem indicar outra loja |
-| `03_arrependimento_devolucao` | "Me arrependi da minha compra, posso devolver meu pedido?" | verificação de identidade, prazos de 7/30/90 dias com o relógio real (todos vencidos) |
-| `03b_arrependimento_dentro_do_prazo` | o mesmo, com `now: 2026-02-20` | pedido dentro do prazo de arrependimento, condições da 4.1 e abertura de chamado |
-| `04_status_pedido_email_compartilhado` | status de pedido com e-mail usado por dois clientes | verificação pela combinação de dados, pedido parado, reclamação registrada |
-| `05_endereco_horario_saxofone` | "Qual o endereço da loja?" | manual de políticas, feriado de 20/11, categoria sem itens (saxofone) → interesse registrado |
+| [`01_violoes_ate_1000`](examples/01_violoes_ate_1000.md) | "Quais opções de violões disponíveis custando até R$1000?" | busca só entre itens disponíveis (o sem estoque e o descontinuado ficam de fora), item que só cabe no orçamento no PIX, refinamento por corda, parcelamento pela seção 3.1, frete grátis em Campo Grande |
+| [`02_takamine_promocao_acessorios`](examples/02_takamine_promocao_acessorios.md) | "Quanto custa o Takamine GD20?" | preço, PIX e parcelas; promoção de 12% encerrada tratada com transparência (7.3); recusa de cordas e amplificador sem indicar outra loja |
+| [`03_arrependimento_devolucao`](examples/03_arrependimento_devolucao.md) | "Me arrependi da minha compra, posso devolver meu pedido?" | verificação de identidade, prazo de arrependimento calculado (relógio em 20/02/2026), condições da 4.1, chamado de devolução |
+| [`04_status_pedido_email_compartilhado`](examples/04_status_pedido_email_compartilhado.md) | status de pedido com e-mail usado por dois clientes | verificação pela combinação de dados, pedido parado há meses, reclamação com prazo de 24 horas úteis |
+| [`05_endereco_horario_saxofone`](examples/05_endereco_horario_saxofone.md) | "Qual o endereço da loja?" | manual de políticas, feriado de 20/11, categoria sem itens (saxofone) tratada como interesse, não como fora do escopo |
 
-> **Pendente:** os arquivos `examples/*.md` ainda não foram gerados neste ramo, porque o ambiente em que o código foi escrito não tinha uma chave de LLM. Basta rodar o laço acima com `MODEL` e a chave configurados. Cada arquivo registra no cabeçalho o modelo, a data, o commit e o relógio usado.
+Cada arquivo registra no cabeçalho o modelo, a data, o commit e o relógio usado, e mostra as ferramentas consultadas em cada resposta (blocos recolhíveis com a entrada e a saída de cada chamada).
+
+**Sobre a data simulada do exemplo 3:** os pedidos da base são de outubro/2025 a março/2026; com o relógio real, todo prazo de 7 dias já venceu (o agente explica isso e oferece o caminho da garantia — o cenário `arrependimento_prazo_vencido` cobre esse caso). Para mostrar a regra aplicada a um pedido dentro do prazo, o exemplo congela o relógio em 20/02/2026 e esconde os registros posteriores.
 
 ## Arquitetura
 
@@ -124,12 +125,14 @@ Antes de depender disso, um *spike* na versão instalada (`langgraph 1.2.19`) co
 
 ### Modelo e provedor
 
-Provedor configurável por uma variável (`MODEL=provider:modelo`) via `init_chat_model`; o caminho padrão documentado é a API da Anthropic (`anthropic:claude-sonnet-5-5`, ou `claude-haiku-5-5` para custo/latência menores). Motivos:
-- um revisor precisa de **uma** variável e uma chave, sem conta AWS nem GPU;
-- trocar de provedor é configuração, não código;
-- não há modelo padrão no código: os IDs mudam (os do plano original, Haiku 3.5 e Sonnet 4, já foram aposentados).
+O provedor é configurado por uma variável (`MODEL=provider:modelo`) via `init_chat_model` do LangChain; trocar de provedor é configuração, não código, e não existe modelo padrão escondido (os IDs mudam: os do plano original, Haiku 3.5 e Sonnet 4, já foram aposentados).
 
-Detalhes que importam com os modelos atuais: **não envio `temperature`** (os Claude 5.x rejeitam valores diferentes do padrão) nem `tool_choice` forçado; `MODEL_EFFORT` controla o "pensamento" padrão dos Claude 5.x (para chat, `low` costuma bastar); o prompt estático é marcado para **prompt caching** quando o provedor é Anthropic.
+Os exemplos e os cenários deste repositório rodaram com o **Gemini 3.5 Flash** (`google_genai:gemini-3.5-flash`, chave do Google AI Studio):
+- um modelo da linha "Flash" basta: toda conta é feita no código, então o modelo só precisa escolher ferramentas, preencher argumentos e redigir em português — e responde rápido e barato, o que importa num atendimento por mensagem;
+- uso uma versão **datada e estável**, não um alias `-latest` (que muda sem aviso e tornaria os exemplos irreproduzíveis). Na hora de gerar os exemplos, os Flash mais novos (3.7 e 3.8) respondiam 503 por alta demanda;
+- foi a chave disponível no prazo. O Claude (`anthropic:claude-sonnet-5-5`, ou `claude-haiku-5-5` para custo menor) roda trocando a variável — o pacote já vem instalado e o formato da requisição foi validado offline —, mas os exemplos não foram gerados com ele.
+
+Detalhes que importam com os modelos atuais: **não envio `temperature`** (os Claude 5.x rejeitam valores diferentes do padrão e o Google recomenda manter o padrão nos Gemini 3; o wrapper do Gemini não envia temperatura para Gemini 3+ quando ela não é definida) nem `tool_choice` forçado; `MODEL_EFFORT` controla o "pensamento" padrão dos Claude 5.x (para chat, `low` costuma bastar); com Claude, o prompt estático é marcado para **prompt caching**.
 
 ### Políticas: arquivo curado + consulta por tópico (sem embeddings, sem BM25)
 
@@ -198,13 +201,13 @@ Onde o enunciado ou o manual são ambíguos, assumi (e o código cita a suposiç
 
 ## Testes e avaliação
 
-- **148 testes unitários** (`uv run pytest`, ~2 s, sem LLM): preços e promoções fixados nos valores conferidos à mão (Takamine GD20: R$ 2.199,00 / PIX R$ 2.089,05 / 12x R$ 183,25; os 12 violões até R$ 1.000; os 8 casos de meio centavo), parcelas, frete, disponibilidade, alertas de cadastro, fidelidade do `policies.md` ao PDF, feriados, verificação (colisão de e-mail, bloqueio após 3 tentativas, chutes paralelos), prazos de devolução nas bordas, chamados. O grafo do LangGraph é testado de ponta a ponta com um **modelo falso roteirizado**.
+- **151 testes unitários** (`uv run pytest`, ~2 s, sem LLM): preços e promoções fixados nos valores conferidos à mão (Takamine GD20: R$ 2.199,00 / PIX R$ 2.089,05 / 12x R$ 183,25; os 12 violões até R$ 1.000; os 8 casos de meio centavo), parcelas, frete, disponibilidade, alertas de cadastro, fidelidade do `policies.md` ao PDF, feriados, verificação (colisão de e-mail, bloqueio após 3 tentativas, chutes paralelos), prazos de devolução nas bordas, chamados. O grafo do LangGraph é testado de ponta a ponta com um **modelo falso roteirizado**.
 - **Cenários roteirizados** (`uv run emporio-evals`, [`evals/scenarios.yaml`](evals/scenarios.yaml)): 23 conversas com o modelo real — as 4 do enunciado e casos difíceis (guitarra × violão, saxofone, acessórios, pedido de desconto, Black Friday, injeção de prompt, LGPD, feriado, carrinho misto, enumeração de pedidos). As checagens são código, não um LLM juiz: ferramentas chamadas, conteúdo das saídas, termos proibidos/obrigatórios na resposta e **todo valor em R$ da resposta precisa ter saído de uma ferramenta** (ou da fala do cliente).
 
 ## Limitações e próximos passos
 
 **Limitações conhecidas**
-- Os exemplos e os cenários com o modelo real ainda não foram rodados neste ramo (sem chave de LLM no ambiente de desenvolvimento).
+- Os exemplos e os cenários rodaram com um único modelo (Gemini 3.5 Flash). As respostas variam de uma execução para outra, e outro modelo pode pedir ajustes no prompt.
 - Histórico só em memória: fechar o CLI perde a conversa. Não há corte de histórico para conversas muito longas.
 - A base não tem endereço de entrega, canal de compra (online/loja) nem data real de entrega; as regras de devolução usam as suposições 8 e 16.
 - Feriados municipais de Campo Grande e horários estendidos de datas especiais não estão na base.
