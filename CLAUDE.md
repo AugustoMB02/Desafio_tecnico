@@ -4,9 +4,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-This repo holds a take-home challenge (Artefact, AI Engineer). It contains the inputs (CSVs, two PDFs), the original plan (`PLAN.md`), a verified review of that plan (`Plan_Review.md`), standard-library analysis scripts under `scripts/`, and `HANDOFF.md`, which records the current state, the decision defaults and the next steps. **Read `HANDOFF.md` first.** No application code, dependencies, build, lint or test setup exists yet. When you add tooling, put its commands in this file.
+This repo holds a take-home challenge (Artefact, AI Engineer). It contains the inputs under `data/` (CSVs, two PDFs), the original plan (`PLAN.md`), a verified review of that plan (`Plan_Review.md`), standard-library analysis scripts under `scripts/`, and `HANDOFF.md`, which records the current state, the decision defaults and the next steps. **Read `HANDOFF.md` first.**
 
-The full brief is in `desafio_tecnico_ai_eng_artefact.pdf`. Read it with `pdftotext -layout <file> -`. Everything in the brief and the data is in Portuguese (pt-BR), and the agent must answer customers in Portuguese.
+The full brief is in `data/desafio_tecnico_ai_eng_artefact.pdf`. Read it with `pdftotext -layout <file> -`. Everything in the brief and the data is in Portuguese (pt-BR), and the agent must answer customers in Portuguese.
+
+## Commands
+
+Python 3.12 via `uv` (`.python-version`), package layout `src/emporio_agent/`, tests in `tests/`.
+
+```bash
+uv sync                        # install (locked in uv.lock)
+uv run pytest                  # unit tests (no LLM calls)
+uv run pytest tests/test_x.py::test_name   # a single test
+uv run ruff check . && uv run ruff format --check .   # lint + format check (scripts/ excluded)
+uv run emporio-agent           # CLI entry point
+python3 scripts/review_checks/check_numbers.py       # re-derive the numbers cited in the docs
+```
 
 ## The task
 
@@ -34,7 +47,7 @@ Hard constraint: **Python** must be the main language. Framework, LLM provider, 
 
 ## Data layout and quirks
 
-The brief places the files under `data/`, but they currently sit at the repo root. Each CSV filename has a `desafio_tecnico_ai_eng - ` prefix with spaces (e.g. `desafio_tecnico_ai_eng - products.csv`), so always quote these paths.
+The input files live under `data/` (moved there with `git mv`). Each CSV filename has a `desafio_tecnico_ai_eng - ` prefix with spaces (e.g. `desafio_tecnico_ai_eng - products.csv`), so always quote these paths.
 
 Relational schema (join keys):
 - `products` (`product_id`, `price_brl`, `name`, `category_id`, `description`, `stock_quantity`, `status`, `specs`, `created_at`): `specs` holds a JSON object stored as a CSV-quoted string.

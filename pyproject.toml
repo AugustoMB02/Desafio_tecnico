@@ -1,0 +1,45 @@
+[project]
+name = "emporio-agent"
+version = "0.1.0"
+description = "Agente de atendimento (texto) da Empório da Música — desafio técnico Artefact"
+authors = [
+    { name = "Augusto Mariano Bernardi" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "holidays>=0.108",
+    "langchain>=1.4.8",
+    "langchain-anthropic>=1.7.9",
+    "langgraph>=1.2.19",
+    "python-dotenv>=1.2.4",
+    "tzdata>=2026.6",
+]
+
+[project.scripts]
+emporio-agent = "emporio_agent.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.11.32,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pypdf>=6.21.4",
+    "pytest>=9.2.0",
+    "pyyaml>=6.0.3",
+    "ruff>=0.17.3",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+# scripts/ holds standalone, stdlib-only analysis scripts kept as written for the plan review
+extend-exclude = ["scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["RUF001", "RUF002", "RUF003"]  # pt-BR text uses typographic dashes and accents
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
