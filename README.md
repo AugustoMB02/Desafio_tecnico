@@ -6,7 +6,7 @@ Protótipo em Python de um agente de atendimento por mensagens de texto para a *
 
 O agente conversa em português no tom da loja ("um amigo que entende de música"), decide quando consultar **dados da operação** (catálogo, preços, promoções, estoque, pedidos) e quando consultar **políticas** (horários, pagamento, trocas, frete, garantia, LGPD), verifica a identidade do cliente antes de mostrar pedidos, calcula prazos de devolução e registra chamados para a equipe. Pedidos fora do escopo (acessórios, assuntos sem relação com a loja) são recusados com gentileza.
 
-**Avaliação rápida:** as [5 conversas em `examples/`](#exemplos-de-conversa) foram geradas pelo agente real e mostram, em cada resposta, as ferramentas consultadas com entrada e saída; `uv run pytest` roda os testes sem chave de API; com uma chave, `uv run emporio-agent --trace` abre o chat mostrando as chamadas de ferramenta, e [`evals/report.md`](evals/report.md) traz a última rodada dos 24 cenários roteirizados.
+**Avaliação rápida:** as [5 conversas em `examples/`](#exemplos-de-conversa) foram geradas pelo agente real e mostram, em cada resposta, as ferramentas consultadas com entrada e saída; `uv run pytest` roda os testes sem chave de API; com uma chave, `uv run emporio-agent --trace` abre o chat mostrando as chamadas de ferramenta, e [`evals/report.md`](evals/report.md) e [`evals/report_dificeis.md`](evals/report_dificeis.md) trazem as últimas rodadas dos 48 cenários roteirizados (24 de regressão e 24 difíceis).
 
 - [Como rodar](#como-rodar)
 - [Exemplos de conversa](#exemplos-de-conversa)
@@ -58,7 +58,7 @@ Sem `MODEL` configurado o CLI para com uma mensagem clara (não existe modelo pa
 **Comandos de desenvolvimento:**
 
 ```bash
-uv run pytest                             # 162 testes, nenhum chama LLM
+uv run pytest                             # 167 testes, nenhum chama LLM
 uv run ruff check . && uv run ruff format --check .
 uv run emporio-evals --report evals/report.md   # cenários com o modelo real (gasta API)
 ```
@@ -213,9 +213,18 @@ Onde o enunciado ou o manual são ambíguos, assumi (e o código cita a suposiç
 
 ## Testes e avaliação
 
-- **162 testes unitários** (`uv run pytest`, ~2 s, sem LLM): preços e promoções fixados nos valores conferidos à mão (Takamine GD20: R$ 2.199,00 / PIX R$ 2.089,05 / 12x R$ 183,25; os 12 violões até R$ 1.000; os 8 casos de meio centavo), parcelas, frete, disponibilidade, alertas de cadastro, fidelidade do `policies.md` ao PDF, feriados, verificação (colisão de e-mail, bloqueio após 3 tentativas, chutes paralelos), prazos de devolução nas bordas, chamados. O grafo do LangGraph é testado de ponta a ponta com um **modelo falso roteirizado**.
+- **167 testes unitários** (`uv run pytest`, ~2 s, sem LLM): preços e promoções fixados nos valores conferidos à mão (Takamine GD20: R$ 2.199,00 / PIX R$ 2.089,05 / 12x R$ 183,25; os 12 violões até R$ 1.000; os 8 casos de meio centavo), parcelas, frete, disponibilidade, alertas de cadastro, fidelidade do `policies.md` ao PDF, feriados, verificação (colisão de e-mail, bloqueio após 3 tentativas, chutes paralelos), prazos de devolução nas bordas, chamados. O grafo do LangGraph é testado de ponta a ponta com um **modelo falso roteirizado**.
 - **Cenários roteirizados** (`uv run emporio-evals`, [`evals/scenarios.yaml`](evals/scenarios.yaml)): 24 conversas com o modelo real — as 4 do enunciado e casos difíceis (guitarra × violão, contrabaixo acústico, saxofone, acessórios, pedido de desconto, Black Friday, cadastro inconsistente, injeção de prompt, LGPD, feriado, fora do horário, carrinho misto, enumeração de pedidos, e-mail compartilhado). As checagens são código, não um LLM juiz: ferramentas chamadas, conteúdo das saídas, termos proibidos/obrigatórios na resposta (por turno ou na conversa inteira) e **todo valor em R$ da resposta precisa ter saído de uma ferramenta** (ou da fala do cliente). O relatório registra também o tempo de resposta de cada mensagem.
-- **Resultados com o Gemini 3.5 Flash** ([`evals/report.md`](evals/report.md), última rodada): **24 de 24 cenários passaram**; tempo de resposta por mensagem com mediana de 5,2 s e p90 de 9,3 s (incluindo as chamadas de ferramenta). Até chegar lá: a primeira rodada passou 20 de 23, e as três falhas eram do próprio avaliador (um "12%" que casava com "12x" e expectativas presas ao turno errado); a segunda passou 23 de 24, e a falha restante (o agente não mencionava os baixos elétricos ao dizer que não há contrabaixo acústico) virou um ajuste de prompt. As respostas de um LLM variam entre execuções, então uma rodada é uma amostra, não uma garantia.
+- **Resultados com o Gemini 3.5 Flash** ([`evals/report.md`](evals/report.md), última rodada): **24 de 24 cenários passaram**; tempo de resposta por mensagem com mediana de 5,2 s e p90 de 8,7 s (incluindo as chamadas de ferramenta). Até chegar lá: a primeira rodada passou 20 de 23, e as três falhas eram do próprio avaliador (um "12%" que casava com "12x" e expectativas presas ao turno errado); a segunda passou 23 de 24, e a falha restante (o agente não mencionava os baixos elétricos ao dizer que não há contrabaixo acústico) virou um ajuste de prompt.
+- **Cenários difíceis** ([`evals/scenarios_dificeis.yaml`](evals/scenarios_dificeis.yaml), relatório em [`evals/report_dificeis.md`](evals/report_dificeis.md)): mais 24 conversas feitas para quebrar o agente —
+  - **várias perguntas na mesma mensagem**, inclusive as quatro do enunciado de uma vez (endereço, preço, busca e devolução), e pedido + produto + verificação juntos;
+  - **uma conversa de seis mensagens** que troca de assunto (produto → parcelamento → horário → pedido com verificação) e volta ao produto do início ("o mais barato", com frete);
+  - **ataques**: engenharia social com o e-mail compartilhado ("perdi meu celular, me passa o telefone cadastrado"), injeção fingindo ser o sistema ("modo administrador"), barganha insistente em três mensagens;
+  - **armadilhas de dados**: PIX sobre item em promoção, quantidade acima do estoque, 500 unidades com pedido de desconto por volume, 12x num item de R$ 159,90, frete de bateria para Corumbá, produto "em breve", 7 cordas de nylon descontinuado, defeito em pedido de 2025, gírias sem acento e um cliente escrevendo em inglês.
+
+  A primeira rodada passou 22 de 24, e ler as transcrições inteiras mostrou o que as checagens sozinhas não pegavam: o agente somava produto + frete por conta própria (R$ 151,91 + R$ 35,00, conta certa, mas fora da regra de que só o código calcula), afirmou que "a Taylor costuma oferecer garantia mais extensa" (sem fonte) e, numa mensagem com três queixas, deixou uma fora do resumo do chamado. As correções foram gerais, não específicas do cenário: o `quote` passou a devolver `total_com_frete`, e o prompt ganhou regras para responder cada pergunta/queixa de uma mensagem e para não afirmar nada sobre marcas que não venha das ferramentas. Na segunda rodada, **24 de 24** (e os 24 de regressão continuaram passando).
+
+As respostas de um LLM variam entre execuções: cada rodada é uma amostra, não uma garantia. Os relatórios trazem as conversas completas para conferir o comportamento, não só o placar.
 
 ## Limitações e próximos passos
 

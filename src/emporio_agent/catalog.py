@@ -361,4 +361,22 @@ def quote(
         result["frete"] = {"pagando no PIX": ship(total_pix), "outras formas": ship(total)}
     else:
         result["frete"] = ship(paid_by_payment)
+
+    # Total with shipping, whenever the fee is known, so the model never adds it up itself.
+    if city is not None:
+        bases = (
+            {"pagando no PIX": total_pix, "outras formas": total}
+            if payment is None
+            else {"": paid_by_payment}
+        )
+        with_fee = {}
+        for label, amount in bases.items():
+            fee = rules.shipping_for(amount, city, special).fee
+            if fee is not None:
+                with_fee[label] = fmt_brl(amount + fee)
+        if with_fee:
+            values = set(with_fee.values())
+            result["total_com_frete"] = (
+                values.pop() if len(values) == 1 else with_fee  # same total either way
+            )
     return result

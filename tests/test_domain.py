@@ -236,3 +236,32 @@ def test_find_ambiguous_brand_returns_several(store):
 
 def test_find_yamaha_c40(store):
     assert rules.find_products(store, "yamaha c40")[0][1].product_id == 81
+
+
+# --- quote: total with shipping ------------------------------------------------------------
+
+
+def test_quote_total_with_shipping_for_pix_in_campo_grande(store):
+    from emporio_agent.catalog import quote
+
+    q = quote(store, [{"product_id": 119, "quantity": 1}], payment="pix", city="Campo Grande")
+    assert q["total_no_pix"] == "R$ 151,91"
+    assert q["total_com_frete"] == "R$ 186,91"  # 151,91 + 35,00 (below R$ 500)
+
+
+def test_quote_total_with_shipping_without_payment_shows_both(store):
+    from emporio_agent.catalog import quote
+
+    q = quote(store, [{"product_id": 119, "quantity": 1}], city="Campo Grande")
+    assert q["total_com_frete"] == {"pagando no PIX": "R$ 186,91", "outras formas": "R$ 194,90"}
+
+
+def test_quote_total_with_free_shipping_and_unknown_fee(store):
+    from emporio_agent.catalog import quote
+
+    mixed = [{"product_id": 81, "quantity": 1}, {"product_id": 121, "quantity": 1}]
+    assert quote(store, mixed, payment="pix", city="Campo Grande")["total_com_frete"] == (
+        "R$ 1.009,11"
+    )
+    assert "total_com_frete" not in quote(store, [{"product_id": 95}], city="Dourados")
+    assert "total_com_frete" not in quote(store, [{"product_id": 95}])
