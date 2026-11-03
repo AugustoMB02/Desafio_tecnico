@@ -26,6 +26,7 @@ from .clock import TZ, Clock
 from .data import load_store
 from .graph import build_graph
 from .llm import ModelConfigError, load_model
+from .tickets import TicketStore
 from .tools import AgentContext
 
 BANNER = "Empório da Música — Sua música começa aqui. (digite 'sair' para encerrar)"
@@ -150,10 +151,12 @@ def load_script(path: Path) -> dict[str, Any]:
     return data
 
 
-def build_session(model_spec: str | None, now: str | None) -> tuple[Session, str, Clock]:
+def build_session(
+    model_spec: str | None, now: str | None, tickets: TicketStore | None = None
+) -> tuple[Session, str, Clock]:
     model, spec = load_model(model_spec)
     clock = Clock.from_env(now)
-    ctx = AgentContext(store=load_store(), clock=clock)
+    ctx = AgentContext(store=load_store(), clock=clock, tickets=tickets or TicketStore())
     app = build_graph(model, ctx, cache_prompt=spec.supports_prompt_cache)
     return Session(app), spec.spec, clock
 

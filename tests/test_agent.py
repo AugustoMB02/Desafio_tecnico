@@ -131,3 +131,37 @@ def test_model_spec_is_required(monkeypatch):
         parse_spec("claude-sonnet-5-5")
     spec = parse_spec("anthropic:claude-sonnet-5-5")
     assert spec.provider == "anthropic" and spec.supports_prompt_cache
+
+
+def test_cli_script_and_export(tmp_path, monkeypatch):
+    from emporio_agent import cli
+    from emporio_agent.llm import ModelSpec
+
+    model = scripted(
+        ai("", call("consult_policy", topics=["sobre_a_loja"])),
+        ai("Ficamos na Rua 14 de Maio, 3200 — Centro."),
+    )
+    monkeypatch.setattr(cli, "load_model", lambda spec: (model, ModelSpec("fake:model", "fake")))
+    monkeypatch.setattr(cli, "TicketStore", lambda: None)
+    script = tmp_path / "s.yaml"
+    script.write_text(
+        'title: "Endereço"\nnow: "2026-02-20T10:00"\nturns:\n  - "Qual o endereço?"\n',
+        encoding="utf-8",
+    )
+    out = tmp_path / "out.md"
+    assert cli.main(["--script", str(script), "--export", str(out)]) == 0
+    md = out.read_text(encoding="utf-8")
+    assert md.startswith("# Endereço") and "2026-02-20T10:00:00-04:00" in md
+    assert "Rua 14 de Maio, 3200" in md
+
+
+def test_example_scripts_parse():
+    from pathlib import Path
+
+    from emporio_agent.cli import load_script
+
+    scripts = sorted(Path(__file__).parents[1].glob("examples/scripts/*.yaml"))
+    assert len(scripts) >= 5
+    for path in scripts:
+        data = load_script(path)
+        assert data["title"] and all(isinstance(t, str) for t in data["turns"])
