@@ -220,6 +220,7 @@ dependencies = [
     { name = "langchain-anthropic" },
     { name = "langgraph" },
     { name = "python-dotenv" },
+    { name = "pyyaml" },
     { name = "tzdata" },
 ]
 
@@ -227,7 +228,6 @@ dependencies = [
 dev = [
     { name = "pypdf" },
     { name = "pytest" },
-    { name = "pyyaml" },
     { name = "ruff" },
 ]
 
@@ -238,6 +238,7 @@ requires-dist = [
     { name = "langchain-anthropic", specifier = ">=1.7.9" },
     { name = "langgraph", specifier = ">=1.2.19" },
     { name = "python-dotenv", specifier = ">=1.2.4" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "tzdata", specifier = ">=2026.6" },
 ]
 
@@ -245,7 +246,6 @@ requires-dist = [
 dev = [
     { name = "pypdf", specifier = ">=6.21.4" },
     { name = "pytest", specifier = ">=9.2.0" },
-    { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "ruff", specifier = ">=0.17.3" },
 ]
 
