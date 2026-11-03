@@ -20,6 +20,7 @@ uv run ruff check . && uv run ruff format --check .        # lint + format (scri
 
 # Need MODEL=provider:model and the provider key (e.g. ANTHROPIC_API_KEY), env or .env:
 uv run emporio-agent [--trace] [--now 2026-02-20T10:00] [--export out.md]   # chat CLI
+uv run emporio-web [--hide-tools] [--now ...] [--port 7860]                # same agent, Gradio web chat
 uv run emporio-agent --script examples/scripts/01_violoes_ate_1000.yaml \
     --export examples/01_violoes_ate_1000.md                 # regenerate one example
 uv run emporio-evals [--only <id>] [--report evals/report.md]  # scripted scenarios (paid calls)
@@ -37,6 +38,7 @@ python3 scripts/review_checks/check_numbers.py       # re-derive the numbers cit
 - `prompts.py`: static pt-BR persona prompt first (cached on Anthropic), dynamic context last.
 - `llm.py`: `init_chat_model(MODEL)`; no default model, no `temperature` (Claude 5.x rejects it).
 - `cli.py` / `evals.py`: chat CLI with transcript export; scenario runner over `evals/scenarios.yaml`.
+- `web.py`: optional Gradio chat reusing `cli.Session`; tool calls shown as collapsible steps.
 
 Conventions: money always `Decimal`; dates `dd/mm/aaaa`; timezone `America/Campo_Grande`; assumptions are marked `ASSUMPTION` in code and listed in the README. `.state/` (tickets) is gitignored because it may hold customer contacts.
 
