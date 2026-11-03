@@ -63,3 +63,39 @@ The review also proposes a narrower scope with a cut line, safer tool signatures
 - The most valuable use was **adversarial verification**: asking the AI to prove or disprove my own plan with small scripts. Asking it to write more plan would have been less useful.
 - **Every number in the AI-written docs is backed by a script I can re-run** (`scripts/review_checks/`).
 - **Human decisions stay human.** Scope, which review points to accept and when to merge to `main` were left to me.
+
+---
+
+## Session 2: implementation, live testing and hardening (2026-11-03)
+
+**Tool:** Claude Code in a cloud session (claude.ai/code), working on branch `claude/emporio-agent-handoff-5gfkz8` and following `HANDOFF.md`.
+
+### What I asked for and what the assistant did
+
+| # | My request | What Claude Code did | Output |
+|---|---|---|---|
+| 1 | Check out the handoff branch, read `HANDOFF.md`, set up the environment and continue; then "stop after you set up everything" | Moved the inputs to `data/` and created the uv project (Python 3.12, ruff, pytest); stopped after the skeleton | `52b0d87`, `3ac2464` |
+| 2 | Continue with the next steps, committing and pushing regularly | Implemented the domain rules, curated policies, clock, LangGraph agent, verification/orders, returns/tickets, scenario runner and README, each with tests. Before relying on LangGraph's `Command`/`InjectedState`, ran a spike on the installed version | `fa7b523` … `263c78d` |
+| 3 | Use the container's credentials for tests | Checked them first: the AWS keys were proxy placeholders (AWS rejected them) and there was no Anthropic key, so it did not use them | — |
+| 4 | Use my Gemini key; the deadline is tonight; "use your best judgement" | Kept the key only in the gitignored `.env` and checked every commit for it. Probed which models answered and picked a dated stable one (`gemini-3.5-flash`). Generated the examples, read them, fixed what they exposed and regenerated | `2d65a27`, `examples/` |
+| 5 | While I commuted: re-read the brief, check the requirements, propose improvements and try them, on new branches if needed | Audited the brief (the repo was private and `main` lacked the work), merged `main` into the branch, rewrote the README's AI-usage section to match `AI_USAGE.md` and this log, fixed the eval harness, and built two optional features on separate branches | `9466b7a`, `4d9aa78`, `c9f883e`; branches `feat/persistencia-sqlite`, `feat/web-ui-gradio`, `feat/persistencia-e-web` |
+| 6 | Run more and harder examples, including several questions in one message | Wrote 24 hard scenarios, read every transcript, fixed three agent problems and some checker issues, and re-ran both scenario sets | `8a03afc`, `16da6fe`, `evals/report_dificeis.md` |
+| 7 | Check the README against the AI-usage files on `main` | Completed the README section with all the steering decisions in `AI_USAGE.md` and wrote this entry | — |
+
+### How the work was checked
+
+- **Unit tests** pinned to hand-checked values (158 on the delivery branch), running the real graph with a scripted fake model, so no API calls.
+- **A spike before relying on LangGraph behaviour.** It confirmed that parallel tool calls see the state from before the step, so customer verification returns the orders itself.
+- **Live runs against Gemini 3.5 Flash:** the five examples plus 48 scripted scenarios, graded by code (tools called, forbidden content, every R$ amount traceable to a tool output). **Every transcript was also read**, which caught what the checks did not: invented product details, an unsupported claim about a brand's warranty, a complaint left out of a ticket, and the model adding product + shipping itself.
+
+### How I steered it
+
+- **Scope and pace:** stop after setup, then continue; bigger features on separate branches; harder tests with several questions per message.
+- **Provider:** Gemini, because it was the key available before the deadline. The code stays provider-agnostic (`MODEL=provider:model`).
+- **The review's recommendations** (left open in Session 1): they went in through the decision defaults in `HANDOFF.md`, which I let stand. The README table *O que mudou do plano para a implementação* lists each change and why.
+- **What stays mine:** making the repository public, merging into `main` and choosing which optional branches to merge.
+
+### Limits worth stating honestly
+
+- One model and a few runs per scenario: a sample, not a guarantee. Nothing was run against Claude; only its request payload was validated offline.
+- The five examples were generated at `b65c638`, before the last prompt changes. The scenario sets were re-run on the final code.
