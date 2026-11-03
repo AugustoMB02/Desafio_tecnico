@@ -26,6 +26,7 @@ from .clock import TZ, Clock
 from .data import load_store
 from .graph import build_graph
 from .llm import ModelConfigError, load_model
+from .persistence import DEFAULT_DB, sqlite_checkpointer
 from .tickets import TicketStore
 from .tools import AgentContext
 
@@ -75,8 +76,12 @@ class Session:
         self.config = {"configurable": {"thread_id": thread_id or uuid.uuid4().hex}}
         self.turns: list[Turn] = []
 
+    def history_size(self) -> int:
+        """Messages already stored in this thread (non-zero when resuming a session)."""
+        return len(self.app.get_state(self.config).values.get("messages", []))
+
     def send(self, text: str) -> Turn:
-        before = len(self.app.get_state(self.config).values.get("messages", []))
+        before = self.history_size()
         state = self.app.invoke({"messages": [HumanMessage(text)]}, self.config)
         turn = collect_turn(text, state["messages"][before + 1 :])
         self.turns.append(turn)
@@ -167,13 +172,21 @@ def load_script(path: Path) -> dict[str, Any]:
 
 
 def build_session(
-    model_spec: str | None, now: str | None, tickets: TicketStore | None = None
+    model_spec: str | None,
+    now: str | None,
+    tickets: TicketStore | None = None,
+    session_name: str | None = None,
+    db_path: Path | None = None,
 ) -> tuple[Session, str, Clock]:
+    """A chat session; with `session_name`, the thread is persisted in SQLite and resumable."""
     model, spec = load_model(model_spec)
     clock = Clock.from_env(now)
     ctx = AgentContext(store=load_store(), clock=clock, tickets=tickets or TicketStore())
-    app = build_graph(model, ctx, cache_prompt=spec.supports_prompt_cache)
-    return Session(app), spec.spec, clock
+    checkpointer = sqlite_checkpointer(db_path or DEFAULT_DB) if session_name else None
+    app = build_graph(
+        model, ctx, cache_prompt=spec.supports_prompt_cache, checkpointer=checkpointer
+    )
+    return Session(app, thread_id=session_name), spec.spec, clock
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -184,17 +197,24 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--trace", action="store_true", help="mostra chamadas de ferramentas")
     parser.add_argument("--script", type=Path, help="roteiro YAML com as falas do cliente")
     parser.add_argument("--export", type=Path, help="salva a conversa em Markdown")
+    parser.add_argument(
+        "--session",
+        metavar="NOME",
+        help="guarda a conversa em .state/conversas.sqlite e a retoma depois com o mesmo nome",
+    )
     args = parser.parse_args(argv)
 
     script = load_script(args.script) if args.script else None
     now = args.now or (script or {}).get("now")
     try:
-        session, model_name, clock = build_session(args.model, now)
+        session, model_name, clock = build_session(args.model, now, session_name=args.session)
     except ModelConfigError as exc:
         print(f"Erro de configuração: {exc}", file=sys.stderr)
         return 2
 
     print(BANNER + "\n")
+    if args.session and (previous := session.history_size()):
+        print(f"(Retomando a conversa '{args.session}': {previous} mensagens anteriores.)\n")
     if script:
         for text in script["turns"]:
             print(f"Você: {text}")

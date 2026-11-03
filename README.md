@@ -42,6 +42,7 @@ Opções do CLI:
 | `--script arquivo.yaml` | roda falas do cliente roteirizadas, sem digitar |
 | `--export conversa.md` | salva a conversa em Markdown, incluindo as ferramentas consultadas |
 | `--model provider:modelo` | sobrescreve `MODEL` |
+| `--session nome` | guarda a conversa em `.state/conversas.sqlite` e a retoma ao abrir de novo com o mesmo nome |
 
 **Outros provedores.** O modelo é carregado com `init_chat_model` do LangChain, então basta trocar `MODEL` e instalar o pacote do provedor, por exemplo `uv add langchain-openai` e `MODEL=openai:<modelo>`, ou `uv add langchain-ollama` e `MODEL=ollama:qwen3:8b` para rodar local. Os pacotes do Gemini (`langchain-google-genai`) e do Claude (`langchain-anthropic`) já vêm instalados; os exemplos e os cenários foram rodados com o Gemini.
 
@@ -157,7 +158,9 @@ O enunciado diz que o foco é o agente funcionando. O CLI tem `--trace` (mostra 
 
 ### Persistência do histórico
 
-`InMemorySaver` do LangGraph: o histórico vale durante a sessão do CLI, que é o que a experiência de chat precisa. Persistir em disco (`SqliteSaver`) é uma linha, mas grava dados pessoais depois da verificação — então só faz sentido com uma política de retenção (LGPD). Os chamados são gravados em `.state/tickets.jsonl`, fora do git.
+Por padrão o histórico vive em memória (`InMemorySaver` do LangGraph) e vale enquanto o CLI está aberto. Com `--session <nome>`, cada passo é gravado em SQLite (`SqliteSaver`, arquivo `.state/conversas.sqlite`) e a conversa continua de onde parou quando o cliente volta — como uma conversa de WhatsApp, que fica no mesmo número. Faz diferença na experiência: "e no PIX, quanto fica aquele que eu perguntei?" funciona num segundo acesso.
+
+O arquivo fica fora do git porque, depois da verificação, contém dados pessoais; e a verificação de identidade também persiste com a conversa. Em produção, o identificador da conversa seria o número do WhatsApp, a verificação expiraria depois de um tempo e o histórico teria uma política de retenção (LGPD).
 
 ### Tratamento dos dados
 
@@ -208,7 +211,7 @@ Onde o enunciado ou o manual são ambíguos, assumi (e o código cita a suposiç
 
 **Limitações conhecidas**
 - Os exemplos e os cenários rodaram com um único modelo (Gemini 3.5 Flash). As respostas variam de uma execução para outra, e outro modelo pode pedir ajustes no prompt.
-- Histórico só em memória: fechar o CLI perde a conversa. Não há corte de histórico para conversas muito longas.
+- Sem `--session`, fechar o CLI perde a conversa; com `--session`, a verificação de identidade não expira. Não há corte de histórico para conversas muito longas.
 - A base não tem endereço de entrega, canal de compra (online/loja) nem data real de entrega; as regras de devolução usam as suposições 8 e 16.
 - Feriados municipais de Campo Grande e horários estendidos de datas especiais não estão na base.
 - A busca por nome é por correspondência de texto (tolera acento, hífen e espaço, ex. "takamine gd 20"), não semântica: "violão bom para fingerstyle" depende do modelo traduzir para filtros.
@@ -218,7 +221,7 @@ Onde o enunciado ou o manual são ambíguos, assumi (e o código cita a suposiç
 **Com mais tempo**
 1. Rodar os cenários várias vezes e com outros modelos (Claude Haiku/Sonnet, Gemini Pro) para medir taxa de acerto (pass^k) e latência, e ajustar o prompt pelos erros.
 2. UI web em Python puro (Chainlit ou Gradio) mostrando as ferramentas chamadas.
-3. Persistência com `SqliteSaver` e política de retenção; integração com o WhatsApp Business (o número do remetente como fator de verificação).
+3. Integração com o WhatsApp Business (o número do remetente como identificador da conversa e fator de verificação), com expiração da verificação e política de retenção do histórico.
 4. Chamados num sistema real (helpdesk) e notificação da equipe.
 5. LLM como juiz só para tom/empatia, validado contra conversas rotuladas à mão, com um modelo diferente do agente.
 6. Confirmar com a loja as suposições 3, 4, 8 e 11 (são as que mudam respostas).
