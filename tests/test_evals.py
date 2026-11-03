@@ -33,6 +33,8 @@ def test_money_values():
 
 def test_plain_numbers():
     assert {Decimal(1000), Decimal(500)} <= plain_numbers("até 1.000 ou 500 reais")
+    assert Decimal(2000) in plain_numbers("tenho uns 2 mil")
+    assert Decimal(1500) in plain_numbers("até 1,5k")
 
 
 def record(reply, tools=(), outputs=(), user="oi"):

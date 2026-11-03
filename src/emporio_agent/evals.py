@@ -57,8 +57,10 @@ def money_values(text: str) -> set[Decimal]:
 
 
 def plain_numbers(text: str) -> set[Decimal]:
-    """Bare numbers a customer might type as a budget ("até 1000", "1.000")."""
+    """Bare numbers a customer might type as a budget ("até 1000", "1.000", "2 mil", "2k")."""
     found = set()
+    for number, _unit in re.findall(r"(\d+(?:[.,]\d+)?)\s*(mil|k)\b", text, flags=re.I):
+        found.add(Decimal(number.replace(",", ".")) * 1000)
     for raw in re.findall(r"\d[\d.,]*", text):
         cleaned = raw.rstrip(".,")
         if "," in cleaned:
