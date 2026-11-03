@@ -3,6 +3,7 @@
 from decimal import Decimal
 from pathlib import Path
 
+import pytest
 import yaml
 
 from emporio_agent.cli import Session
@@ -83,11 +84,23 @@ def test_text_checks_ignore_accents_and_case():
     assert failures(check_turn({"reply_none": ["fechada"]}, turn, []))
 
 
-def test_scenarios_file_is_well_formed():
-    scenarios = yaml.safe_load(Path(DEFAULT_SCENARIOS).read_text(encoding="utf-8"))["scenarios"]
+def test_reply_all_needs_every_item():
+    turn = record("Abrimos às 09:00 no sábado; o C40 sai por R$ 599,90.", ["get_product"],
+                  ['{"preco":"R$ 599,90"}'])  # fmt: skip
+    ok = {"reply_all": ["599,90", ["09:00", "9h"]]}
+    assert failures(check_turn(ok, turn, [])) == []
+    [missing] = failures(check_turn({"reply_all": ["599,90", ["CEP", "Correios"]]}, turn, []))
+    assert "CEP" in missing
+
+
+@pytest.mark.parametrize(
+    "path", [DEFAULT_SCENARIOS, Path(DEFAULT_SCENARIOS).with_name("scenarios_dificeis.yaml")]
+)
+def test_scenarios_file_is_well_formed(path):
+    scenarios = yaml.safe_load(Path(path).read_text(encoding="utf-8"))["scenarios"]
     ids = [s["id"] for s in scenarios]
     assert len(ids) == len(set(ids)) >= 20
-    allowed = {"tools", "no_tools", "tool_output", "reply_any", "reply_none"}
+    allowed = {"tools", "no_tools", "tool_output", "reply_any", "reply_none", "reply_all"}
     for s in scenarios:
         assert s["turns"], s["id"]
         assert set(s.get("expect", {})) <= allowed, s["id"]

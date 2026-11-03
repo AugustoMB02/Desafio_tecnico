@@ -10,6 +10,8 @@ conversation (`expect` at scenario level, for things the agent may do in any tur
 - `tool_output`: strings that must appear in the tool outputs;
 - `reply_any` / `reply_none`: strings the reply must (any of) / must not contain
   (ignoring accents, case and spacing; punctuation counts, so "12%" never matches "12x");
+- `reply_all`: every item must appear; an item that is a list is satisfied by any of its
+  strings (for messages with several questions, where each needs its own answer);
 - always, per turn: every R$ amount in the reply must appear in a tool output (or in the
   user's own messages) so far in the conversation — the numeric-faithfulness check.
 
@@ -93,6 +95,7 @@ class Check:
 @dataclass
 class ScenarioResult:
     scenario_id: str
+    note: str = ""
     checks: list[tuple[int, Check]] = field(default_factory=list)
     turns: list[TurnRecord] = field(default_factory=list)
     error: str | None = None
@@ -118,6 +121,11 @@ def check_expectations(
         checks.append(Check(hit, f"resposta contém um de {any_of}"))
     for text in expect.get("reply_none", []):
         checks.append(Check(fold(text) not in folded, f"resposta não contém {text!r}"))
+    for item in expect.get("reply_all", []):
+        options = item if isinstance(item, list) else [item]
+        hit = any(fold(o) in folded for o in options)
+        label = repr(options[0]) if len(options) == 1 else f"um de {options}"
+        checks.append(Check(hit, f"resposta contém {label}"))
     return checks
 
 
@@ -149,7 +157,7 @@ SessionFactory = Callable[[str | None, TicketStore], Session]
 
 def run_scenario(scenario: dict[str, Any], make_session: SessionFactory) -> ScenarioResult:
     """Run one scenario in a fresh conversation with a throwaway ticket file."""
-    result = ScenarioResult(scenario["id"])
+    result = ScenarioResult(scenario["id"], scenario.get("nota", ""))
     try:
         with tempfile.TemporaryDirectory() as tmp:
             session = make_session(scenario.get("now"), TicketStore(Path(tmp) / "t.jsonl"))
@@ -194,6 +202,8 @@ def render_report(results: list[ScenarioResult], model: str = "") -> str:
     lines.append("")
     for r in results:
         lines.append(f"## {'✅' if r.passed else '❌'} {r.scenario_id}")
+        if r.note:
+            lines.append(f"*{r.note}*\n")
         if r.error:
             lines.append(f"- erro: `{r.error}`")
         for index, check in r.checks:
