@@ -1,11 +1,11 @@
 # Exemplo 5 — Endereço, horário e uma categoria sem itens (saxofone)
 
 - **Modelo:** `google_genai:gemini-3.5-flash`
-- **Gerado em:** 03/11/2026 21:13 (horário de Campo Grande/MS)
-- **Commit:** `f1ebc16`
-- **Relógio:** tempo real
+- **Gerado em:** 03/11/2026 22:05 (horário de Campo Grande/MS)
+- **Commit:** `d637447`
+- **Relógio:** simulado em `2026-11-17T10:00:00-04:00` (`--now`); registros posteriores ficam ocultos
 
-Informações gerais vindas do manual (endereço) e do calendário de feriados (20/11), e uma categoria que existe na loja mas está sem itens: o agente não trata como fora do escopo e registra o interesse do cliente depois de confirmar o resumo.
+Terça-feira, 17/11/2026, 10h, loja aberta. Informações gerais vindas do manual (endereço) e do calendário de feriados (o 20/11 cai na sexta-feira seguinte), e uma categoria que existe na loja mas está sem itens: o agente não trata como fora do escopo e registra o interesse do cliente depois de confirmar o resumo.
 
 
 **Cliente:** Qual o endereço da loja?
@@ -20,11 +20,9 @@ Informações gerais vindas do manual (endereço) e do calendário de feriados (
 
 </details>
 
-**Empório da Música:** Ficamos na **Rua 14 de Maio, 3200 — Centro**, Campo Grande - MS (CEP 79202-333) 📍  
+**Empório da Música:** Estamos localizados na **Rua 14 de Maio, 3200 — Centro, Campo Grande - MS** (CEP 79202-333). 📍  
   
-No momento a loja física está fechada, mas reabrimos amanhã (quarta-feira) às 09:00.   
-  
-Precisa de mais alguma informação ou ajuda com algum instrumento?
+Precisa de mais alguma informação ou gostaria de dar uma olhada em nossos instrumentos?
 
 **Cliente:** E vocês abrem no dia 20 de novembro?
 
@@ -33,57 +31,65 @@ Precisa de mais alguma informação ou ajuda com algum instrumento?
 - `check_store_hours({"day": "20/11/2026"})`
 
   ```json
-  {"agora":"A loja está fechada agora. Próxima abertura: quarta-feira, 04/11/2026 às 09:00.","dia_consultado":"sexta-feira, 20/11/2026: fechado (feriado: Dia Nacional de Zumbi e da Consciência Negra)","proxima_abertura":"sábado, 21/11/2026: aberto das 09:00 às 13:00"}
+  {"agora":"A loja está aberta agora (fecha às 18:00).","dia_consultado":"sexta-feira, 20/11/2026: fechado (feriado: Dia Nacional de Zumbi e da Consciência Negra)","proxima_abertura":"sábado, 21/11/2026: aberto das 09:00 às 13:00"}
   ```
 
 </details>
 
-**Empório da Música:** No dia 20 de novembro (sexta-feira) estaremos **fechados**, pois é feriado nacional (Dia Nacional de Zumbi e da Consciência Negra).  
+**Empório da Música:** No dia 20 de novembro (sexta-feira) estaremos fechados devido ao feriado do Dia Nacional de Zumbi e da Consciência Negra.   
   
-Voltamos a atender no sábado, dia 21/11, das 09:00 às 13:00.  
+Reabriremos no sábado, 21/11, das 09h às 13h.   
   
-Posso te ajudar com mais alguma dúvida?
+Precisa de ajuda com mais alguma coisa?
 
 **Cliente:** Vocês têm saxofone?
 
-<details><summary>Ferramentas consultadas: <code>search_catalog</code></summary>
+<details><summary>Ferramentas consultadas: <code>search_catalog</code>, <code>search_catalog</code></summary>
 
-- `search_catalog({"category": "sopro_madeiras", "query": "saxofone"})`
+- `search_catalog({"category": "sopro_madeiras"})`
 
   ```json
   {"total_encontrado":0,"itens":[],"categoria_sem_itens":"A categoria 'Instrumentos de Sopro (Madeiras)' existe na loja, mas não há nenhum item cadastrado no momento. Não é fora do escopo: ofereça registrar interesse."}
   ```
+- `search_catalog({"query": "saxofone"})`
+
+  ```json
+  {"total_encontrado":0,"itens":[],"observacao":"Nenhum item disponível com esses filtros."}
+  ```
 
 </details>
 
-**Empório da Música:** No momento não temos saxofones disponíveis em estoque.  
+**Empório da Música:** No momento não temos saxofones disponíveis em nosso estoque.   
   
-Se você quiser, posso registrar o seu interesse para a nossa equipe te avisar assim que chegarem novas unidades! Deseja que eu faça esse registro?
+Se quiser, posso registrar o seu interesse para que nossa equipe entre em contato assim que tivermos novidades!   
+  
+Gostaria de registrar esse interesse ou posso te ajudar com outro instrumento?
 
 **Cliente:** Quero sim, meu telefone é (67) 99111-2233
 
-**Empório da Música:** Perfeito! Antes de abrir o chamado, por favor confirme se os dados estão corretos:  
+**Empório da Música:** Perfeito! Antes de registrar, por favor confirme os dados:  
   
-- **Solicitação:** Registro de interesse em saxofone  
-- **Telefone para contato:** (67) 99111-2233  
+- **Assunto:** Interesse no instrumento Saxofone  
+- **Contato:** (67) 99111-2233  
   
-Posso confirmar o registro?
+Posso confirmar o registro do seu interesse?
 
 **Cliente:** Isso, pode registrar!
 
 <details><summary>Ferramentas consultadas: <code>open_ticket</code></summary>
 
-- `open_ticket({"contact": "(67) 99111-2233", "summary": "Cliente com interesse na compra de saxofone.", "kind": "interesse"})`
+- `open_ticket({"kind": "interesse", "summary": "Interesse na aquisição de saxofone.", "contact": "(67) 99111-2233"})`
 
   ```json
-  {"protocolo":"EMP-2026-0003","tipo":"interesse","retorno":"a equipe entra em contato pelo canal do cliente (não há prazo definido no manual: não prometa prazo)"}
+  {"protocolo":"EMP-2026-0002","tipo":"interesse","retorno":"a equipe entra em contato pelo canal do cliente (não há prazo definido no manual: não prometa prazo)"}
   ```
 
 </details>
 
 **Empório da Música:** Prontinho! Seu interesse foi registrado com sucesso.   
   
-📋 **Protocolo:** EMP-2026-0003    
-Nossa equipe entrará em contato com você pelo telefone informado assim que tivermos novidades sobre saxofones em estoque.  
+📋 **Protocolo:** `EMP-2026-0002`  
   
-Precisa de mais alguma coisa?
+Nossa equipe entrará em contato com você pelo telefone informado assim que tivermos novidades sobre saxofones.  
+  
+Posso te ajudar em algo mais hoje?
