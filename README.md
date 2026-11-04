@@ -68,17 +68,17 @@ for f in examples/scripts/*.yaml; do
 done
 ```
 
-| Conversa | Cenário | O que demonstra |
-|---|---|---|
-| [`01_violoes_ate_1000`](examples/01_violoes_ate_1000.md) | "Quais opções de violões disponíveis custando até R$1000?" | busca só entre itens disponíveis (o sem estoque e o descontinuado ficam de fora), item que só cabe no orçamento no PIX, refinamento por corda, parcelamento pela seção 3.1, frete grátis em Campo Grande |
-| [`02_takamine_promocao_acessorios`](examples/02_takamine_promocao_acessorios.md) | "Quanto custa o Takamine GD20?" | preço, PIX e parcelas; promoção de 12% encerrada tratada com transparência (7.3); recusa de cordas e amplificador sem indicar outra loja |
-| [`03_arrependimento_devolucao`](examples/03_arrependimento_devolucao.md) | "Me arrependi da minha compra, posso devolver meu pedido?" | verificação de identidade, prazo de arrependimento calculado (relógio em 20/02/2026), condições da 4.1, chamado de devolução |
-| [`04_status_pedido_email_compartilhado`](examples/04_status_pedido_email_compartilhado.md) | status de pedido com e-mail usado por dois clientes | verificação pela combinação de dados, pedido parado há meses, reclamação com prazo de 24 horas úteis |
-| [`05_endereco_horario_saxofone`](examples/05_endereco_horario_saxofone.md) | "Qual o endereço da loja?" | manual de políticas, feriado de 20/11, categoria sem itens (saxofone) tratada como interesse, não como fora do escopo |
+| Conversa | Quando | Cenário | O que demonstra |
+|---|---|---|---|
+| [`01_violoes_ate_1000`](examples/01_violoes_ate_1000.md) | terça, 10h30 (loja aberta) | "Quais opções de violões disponíveis custando até R$1000?" | busca só entre itens disponíveis (o sem estoque e o descontinuado ficam de fora), item que só cabe no orçamento no PIX, refinamento por corda, parcelamento pela seção 3.1, frete grátis em Campo Grande |
+| [`02_takamine_promocao_acessorios`](examples/02_takamine_promocao_acessorios.md) | sábado, 15h (loja fechada) | "Quanto custa o Takamine GD20?" | preço, PIX e parcelas; promoção de 12% encerrada tratada com transparência (7.3); recusa de cordas e amplificador sem indicar outra loja; com a loja fechada, o agente atende e avisa quando a equipe volta (7.1) |
+| [`03_arrependimento_devolucao`](examples/03_arrependimento_devolucao.md) | sexta, 10h (loja aberta) | "Me arrependi da minha compra, posso devolver meu pedido?" | verificação de identidade, prazo de arrependimento calculado (pedido recebido três dias antes), condições da 4.1, confirmação da data de recebimento e chamado de devolução |
+| [`04_status_pedido_email_compartilhado`](examples/04_status_pedido_email_compartilhado.md) | segunda, 14h30 (loja aberta) | status de pedido com e-mail usado por dois clientes | verificação pela combinação de dados (o e-mail sozinho não basta), pedido confirmado há cinco dias e ainda sem envio, sem inventar data de entrega |
+| [`05_endereco_horario_saxofone`](examples/05_endereco_horario_saxofone.md) | terça, 10h (loja aberta) | **três perguntas numa só mensagem:** endereço, feriado de 20/11 e saxofone | uma fonte para cada pergunta (manual, calendário e catálogo) consultadas juntas e respondidas na ordem; categoria sem itens tratada como interesse, não como fora do escopo; chamado aberto depois da confirmação |
 
 Cada arquivo registra no cabeçalho o modelo, a data, o commit e o relógio usado, e mostra as ferramentas consultadas em cada resposta (blocos recolhíveis com a entrada e a saída de cada chamada).
 
-**Sobre a data simulada do exemplo 3:** os pedidos da base são de outubro/2025 a março/2026; com o relógio real, todo prazo de 7 dias já venceu (o agente explica isso e oferece o caminho da garantia — o cenário `arrependimento_prazo_vencido` cobre esse caso). Para mostrar a regra aplicada a um pedido dentro do prazo, o exemplo congela o relógio em 20/02/2026 e esconde os registros posteriores.
+**Datas e horários dos exemplos:** cada roteiro fixa a data e a hora da conversa (campo `now`, o mesmo `--now` do CLI), e registros posteriores a essa data ficam ocultos. Quatro conversas acontecem com a loja aberta e uma num sábado à tarde, com a loja fechada, para mostrar o aviso de quando a equipe volta. Os exemplos com pedidos ficam em fevereiro e março de 2026, quando os pedidos da base ainda são recentes; com o relógio real, todos estariam atrasados e todo prazo de devolução vencido — o agente também lida com isso (o cenário `arrependimento_prazo_vencido` em `evals/` cobre esse caso).
 
 ## Arquitetura
 
@@ -211,7 +211,7 @@ Onde o enunciado, o manual ou os dados são ambíguos, assumi uma interpretaçã
 - **A. Quem o agente atende:** o enunciado fala em um agente que vai "auxiliar a equipe". Interpretei como um assistente que conversa direto com o cliente pelo canal de mensagens (o WhatsApp da seção 7 do manual) e passa para a equipe, por chamados, o que precisa de uma pessoa — não como uma ferramenta interna para os atendentes.
 - **B. Identificação do cliente:** o enunciado não diz como o cliente se identifica. Como um canal de mensagens não tem login, a conversa começa anônima e dados de pedido só aparecem depois da verificação por dois dados (número do pedido, e-mail, telefone).
 - **C. Idioma:** respostas sempre em português do Brasil, mesmo quando o cliente escreve em outra língua — a loja e o canal são brasileiros.
-- **D. Data de "hoje":** os pedidos vão de outubro/2025 a março/2026 e o agente usa a data real, então os prazos de devolução estão todos vencidos. Para mostrar uma regra de prazo ainda aberta, um dos exemplos usa uma data simulada, declarada no próprio arquivo.
+- **D. Data de "hoje":** os pedidos vão de outubro/2025 a março/2026 e o agente usa a data real, então os prazos de devolução estão todos vencidos. Os exemplos usam datas e horários fixos, declarados no cabeçalho de cada um, para mostrar a loja aberta e fechada e pedidos ainda dentro do prazo.
 - **E. Equipe e chamados:** os materiais não incluem um sistema de atendimento. O que precisa de pessoa vira um chamado com protocolo num arquivo local, e o agente não promete prazos que o manual não dá.
 - **F. Uso dos dados:** o enunciado permite não usar todos os dados. Clientes e pedidos só servem para verificação e consulta de pedidos, e a descrição dos produtos com cadastro inconsistente não é usada (suposição 15).
 
