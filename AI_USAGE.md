@@ -1,9 +1,5 @@
 # How AI coding assistants were used
 
-The brief asks candidates to explain which AI coding assistants they used and how (*"Uso de assistentes de código: caso faça uso de algum recurso de IA, explique qual a escolhida e como utilizou. Queremos entender o seu workflow"*). The README section *Uso de assistentes de código* (pt-BR) is the short version; this file is the detailed, chronological record.
-
----
-
 ## 1. Summary
 
 - **Tools:** **Antigravity** (Google DeepMind agentic coding environment) for planning and for an independent QA audit; **Claude Code** for an adversarial review of the plan, the implementation and the fixes. [`CLAUDE.md`](CLAUDE.md), generated with Claude Code's `/init`, gave both assistants the same context: the brief's hard constraints (Python, pt-BR answers, incremental Git history), the data schema and the known data quirks.
@@ -44,7 +40,7 @@ I walked the design tree one decision at a time and overrode several of the assi
 |---|---|---|---|
 | Agent framework | PydanticAI, with LangGraph as alternative | **LangGraph** (`StateGraph`) for explicit state and checkpointing | LangGraph, kept |
 | LLM provider and privacy | Public cloud APIs (Gemini / OpenAI) | **Local or AWS** for data safety: Ollama on my RTX 4070 (8 GB) + AWS Bedrock | Provider set by one variable (`MODEL=provider:model`). Live runs used Gemini 3.5 Flash because it was the key I had at hand before the deadline; **in production I would use AWS Bedrock or a local model** (README, *O que mudaria em produção*) |
-| User interface | CLI + generic Chainlit/Streamlit | A customer-first web chat (FastAPI) with an evaluator drawer, plus the CLI | CLI with `--trace` and Markdown export (the brief accepts a CLI); a Gradio web chat exists on an optional, unmerged branch |
+| User interface | CLI + generic Chainlit/Streamlit | A customer-first web chat (FastAPI) with an evaluator drawer, plus the CLI | CLI with `--trace` and Markdown export; a Gradio web chat exists on an optional, unmerged branch |
 | Customer authentication | Conversational 2-of-3 only | Simulated OTP login + 2-of-3 as fallback | 2-of-3 only, with an attempt cap: a code shown on screen protects nothing |
 | Reference clock | A fixed date (2026-03-23) | **Real clock** in `America/Campo_Grande` with an explicit override | Real clock + `--now`, which also hides records dated after it |
 | Git workflow | Wait for manual review before committing | Commit and push continuously | Continuous small commits, on a dedicated branch merged into `main` through pull requests |
