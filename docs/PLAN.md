@@ -1,12 +1,12 @@
 # Engineering Plan, Data Exploration & SOTA Literature Review
 
-> **Status note (2026-11-03):** this is the original plan, kept as written for the record. Several choices were changed after the adversarial review in [`Plan_Review.md`](Plan_Review.md) (policy retrieval, LLM provider, interface, authentication, evaluation). The final design and the reasons are in the README sections *Decisões técnicas* and *Uso de assistentes de código*.
+> **Status note (2026-11-03):** this is the original plan, kept as written for the record, except for one trimmed phrase in the language note below. Several choices were changed after the adversarial review in [`Plan_Review.md`](Plan_Review.md) (policy retrieval, LLM provider, interface, authentication, evaluation). The final design and the reasons are in the README sections *Decisões técnicas* and *Uso de assistentes de código*.
 
 ## Take-Home Challenge — AI Engineer (Artefact) · *Empório da Música*
 
 > **Purpose of this document:** This engineering design document records (1) the forensic Exploratory Data Analysis (EDA) of all provided operational CSVs and policy manual, (2) a literature review of the 2023–2026 State of the Art (SOTA) in tool-augmented customer-service agents, retrieval, guardrails, and evaluation, (3) all finalized, justified architectural decisions resolved during design review across framework, LLM runtime, UI, authentication, data engineering, and testing, and (4) an incremental execution & Git commit plan.
 >
-> Final customer-facing prompts, UI copy, example conversations, and the deliverable `README.md` will be written in Brazilian Portuguese (`pt-BR`) as required by the brief.
+> Final customer-facing prompts, UI copy, example conversations, and the deliverable `README.md` will be written in Brazilian Portuguese (`pt-BR`).
 
 ---
 

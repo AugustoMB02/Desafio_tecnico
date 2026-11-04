@@ -1,6 +1,6 @@
 # Plan Review — `PLAN.md`
 
-> **Status note:** a point-in-time review of [`PLAN.md`](PLAN.md) (commit `e563d6b`), kept as written. Which recommendations were adopted, and why, is in the README table *O que mudou do plano para a implementação*.
+> **Status note:** a point-in-time review of [`PLAN.md`](PLAN.md) (commit `e563d6b`), kept as written except for a shortened paragraph in §5.10. Which recommendations were adopted, and why, is in the README table *O que mudou do plano para a implementação*.
 
 Review of `PLAN.md` and `scripts/explore_data.py` as of commit `e563d6b`, written 2026-11-03.
 
@@ -293,7 +293,7 @@ Smaller commits made as the work happens read as *"progresso real"* better than 
 
 ### 5.10 README "Uso de assistentes de código"
 
-The brief says AI usage can count *in your favour*, depending on how you used it. The story here is good: AI-assisted EDA → plan → an adversarial review (this file) → **your decisions**. Commit this review and list which points you accepted, which you rejected, and why. That shows judgment rather than delegation.
+So far the workflow is AI-assisted EDA → plan → an adversarial review (this file) → **your decisions**. Commit this review and list which points you accepted, which you rejected, and why.
 
 ---
 
