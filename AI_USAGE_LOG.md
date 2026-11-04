@@ -81,7 +81,6 @@ The review also proposes a narrower scope with a cut line, safer tool signatures
 | 5 | While I commuted: re-read the brief, check the requirements, propose improvements and try them, on new branches if needed | Audited the brief (the repo was private and `main` lacked the work), merged `main` into the branch, rewrote the README's AI-usage section to match `AI_USAGE.md` and this log, fixed the eval harness, and built two optional features on separate branches | `9466b7a`, `4d9aa78`, `c9f883e`; branches `feat/persistencia-sqlite`, `feat/web-ui-gradio`, `feat/persistencia-e-web` |
 | 6 | Run more and harder examples, including several questions in one message | Wrote 24 hard scenarios, read every transcript, fixed three agent problems and some checker issues, and re-ran both scenario sets | `8a03afc`, `16da6fe`, `evals/report_dificeis.md` |
 | 7 | Check the README against the AI-usage files on `main` | Completed the README section with all the steering decisions in `AI_USAGE.md` and wrote this entry | — |
-| 8 | Address the QA reports that Antigravity (Gemini) wrote on `main` after a read-only audit | Reproduced each reported failing input before changing anything, fixed the confirmed ones with regression tests, turned six red-team conversations into scenarios, regenerated the examples and answered every finding | `reports/04_resposta_ao_qa.md`, `tests/test_qa_fixes.py` |
 
 ### How the work was checked
 
@@ -99,5 +98,66 @@ The review also proposes a narrower scope with a cut line, safer tool signatures
 ### Limits worth stating honestly
 
 - One model and a few runs per scenario: a sample, not a guarantee. Nothing was run against Claude; only its request payload was validated offline.
-- The five examples and both scenario sets were re-run on the code after the QA fixes.
-- Using a second model as an adversarial reviewer found real defects that the tests and scenarios written in this session had missed (e.g. a typed receipt date reopening an old order's return window). Some limits it found remain, listed with reasons in `reports/04_resposta_ao_qa.md`.
+- The five examples were generated at `b65c638`, before the last prompt changes. The scenario sets were re-run on the final code.
+
+---
+
+## Session 3: independent multi-agent QA, live red-teaming and deliverables audit (2026-11-03)
+
+**Tool:** Antigravity (Google DeepMind agentic coding environment), coordinating three parallel subagents on `main` (`9d5b635`) after PR #1 was merged.
+
+**Why switch assistants again:** Claude Code wrote both the implementation and the 48 evaluation scenarios in Session 2, which creates a blind-spot risk (tests shaped around the author's own assumptions and container environment). Before making final fixes, I brought the merged repo back to Antigravity for an independent adversarial audit.
+
+### What I asked for and what the assistant did
+
+| # | My request | What Antigravity did | Output |
+|---|---|---|---|
+| 1 | Test the merged system and live chatbot (`google_genai:gemini-3.5-flash`), find shortcomings and failure modes, use multiple agents if needed, **don't fix anything yet**, and write QA reports | Synced the local `uv` environment, ran `pytest` (immediately exposing 4 locale-dependent failures), read all 16 modules, defined a sandboxed `qa-runner` subagent, ran three parallel audit tracks, and wrote four structured QA reports without modifying any existing repo file | [`reports/00_executive_qa_summary.md`](reports/00_executive_qa_summary.md) … [`reports/03_deliverables_and_branches_audit.md`](reports/03_deliverables_and_branches_audit.md) (`5b56d1c`) |
+| 2 | Log how I used Antigravity in this phase so code reviewers can see the full AI workflow | Added Session 3 to this log, updated `AI_USAGE.md` with Phase 4, and added step 5 to `README.md`'s *Uso de assistentes de código* section | `AI_USAGE_LOG.md`, `AI_USAGE.md`, `README.md` |
+
+### How the audit was done (request 1)
+
+Three subagents worked concurrently against a read-only working tree (with runtime ticket files isolated in temporary directories outside the repo):
+
+- **Track 1 — Static Code, Domain Logic & Security Auditor:** Read all 16 Python modules, all 8 test files, `data/policies.md` vs. all 8 pages of `políticas_da_loja.pdf`, and `evals/*.yaml`, verifying edge cases against `.venv`:
+  - **Locale bug invisible in the cloud container:** `holidays.Brazil(subdiv="MS", years=year)` in `clock.py` omits `language="pt_BR"`. In Session 2's `LANG=C.UTF-8` container it fell back to Portuguese; on a standard `LANG=en_US.UTF-8` Linux machine it returns English holiday names and fails 4/158 unit tests out of the box.
+  - **Date, city, phone and stock edge cases:** `_parse_day("20/11/26")` parses as year `0026 AD` (reporting the store open on a national holiday); `is_metro` rejects `"Campo Grande - MS"`, `"Campo Grande/MS"` and `"CG"`; `normalize_phone` rejects `0`-prefixed DDDs (`(067)...`) and burns verification attempts; `quote` checks stock per line item instead of aggregating duplicate `product_id`s and approves installments on `boleto`/`pix`; `_haystack` still indexes corrupted `description` fields on inconsistent SKUs (`135–144`), and SKU `#143` has an unflagged synth/piano contradiction.
+  - **Eval-checker blind spots:** `evals.py`'s `_MONEY` regex misses bolded amounts (`R$ **1.999,00**`) and `"reais"` without `R$`, false-fails `"R$ 1,5 mil"`, and lets bare numbers in customer haggling (`"faz por 1800?"`) ground hallucinated discounts.
+- **Track 2 — Live Chatbot Red-Teamer (`gemini-3.5-flash`):** Executed **89 live LLM turns** (42 adversarial conversations, 12 `Pass^3` consistency runs on `scenarios_dificeis.yaml`, and 6 CLI subprocess edge probes):
+  - Confirmed `pass^3 = 100%` (`12/12`) on scenarios already covered by `evals/`, proving the failures found were deterministic tool/policy gaps rather than random model flakiness.
+  - Found live end-to-end exploits and policy gaps: `received_on` spoofing (`"02/11/2026"`) approved 7-day returns with store-paid shipping on 9–10 month old `DELIVERED` and `SHIPPED` orders; unverified Turn-1 callers minted `lgpd` data-deletion tickets for third-party customer emails by asserting *"já confirmo o resumo"*; asking for Policy §7.1's WhatsApp response-time SLA (5 minutes, omitted from both `policies.md` and `prompts.py`) made the agent claim no SLA exists; asking about `26/08` (Campo Grande's municipal holiday) or `Corpus Christi` got a confident `"aberto das 09:00 às 18:00"`; and `"fingerstyle"` missed both `Takamine GD20` and `Tagima Woodstock` due to ascending `limit=5` truncation.
+- **Track 3 — Deliverables & Feature-Branches Auditor:** Checked GitHub public access (`HTTP 404` — repo still private), scanned full git history across all branches for leaked secrets/PII (none found), caught an unasked-question flaw in `examples/03_arrependimento_devolucao.md`, and audited `origin/feat/persistencia-e-web` (finding a per-tab `TicketStore` protocol race, Gradio Retry/Undo state desync, `"local"` session fallback, mid-turn SQLite checkpoint corruption, and heavy core `gradio` dependencies).
+
+### How I steered it
+
+- **Strict separation between diagnosis and mutation (*"don't fix anything yet"*):** Instead of letting the agent silently patch code while testing, I required written, evidence-backed QA reports first so I can decide which fixes to apply, whether to merge `feat/persistencia-e-web`, and in what order.
+- **Cross-agent verification loop:** Antigravity wrote the plan $\rightarrow$ Claude Code adversarially reviewed the plan and implemented the system $\rightarrow$ Antigravity adversarially red-teamed the implementation across multiple agents.
+- **Continuous remote visibility:** Kept the rule of committing and pushing reports directly to `origin/main` (while redacting the live `GOOGLE_API_KEY` from all files, logs, and commits).
+
+### Limits worth stating honestly
+
+- Live red-teaming ran against `google_genai:gemini-3.5-flash` only; Anthropic (`claude-haiku-5-5` / `claude-sonnet-5-5`) findings (`MODEL_EFFORT` compatibility and strict turn-alternation errors after mid-turn failures) were verified statically against the installed `langchain-anthropic` SDK rather than live Anthropic API calls.
+- Because fixes were intentionally held back during this session, `main` at this point still reflects the pre-fix state documented in `reports/`.
+
+---
+
+## Session 4: fixing the audit findings (2026-11-03)
+
+**Tool:** Claude Code, in the same cloud session as Session 2, on branch `claude/emporio-agent-handoff-5gfkz8`.
+
+### What I asked for and what the assistant did
+
+| # | My request | What Claude Code did | Output |
+|---|---|---|---|
+| 1 | Address the QA reports Antigravity wrote on `main` (Session 3) | Reproduced each reported failing input before changing any code (all the top findings reproduced), fixed the confirmed ones with regression tests, turned six red-team conversations into live scenarios, regenerated the five examples, and answered every finding with its status | `c231408`, `ada9f79`, `f1ebc16`, `tests/test_qa_fixes.py`, `reports/04_resposta_ao_qa.md` |
+| 2 | "What is left to do before I deliver it?" | Checked the repo state (now public), merged this log's Session 3 and `AI_USAGE.md` Phase 4 from `main` into the branch, added item 6 to the README section and this entry, so the final merge into `main` is a fast-forward | this entry |
+
+### How the work was checked
+
+- 221 unit tests pass, also with `LANG=en_US.UTF-8`; ruff is clean.
+- Final live runs on the fixed code: 24/24 regression scenarios and 30/30 hard scenarios (including the six red-team cases); the five examples regenerated on the fixed code, with every R$ amount traceable to a tool output.
+
+### Limits worth stating honestly
+
+- Not everything was fixed. The split-payment remainder check, some limits of the eval checker, a few safeguards that still rely on the prompt (confirming before opening a ticket, switching the verified customer mid-chat) and the issues in the optional `feat/*` branches remain, each with its reason in `reports/04_resposta_ao_qa.md`.
+
