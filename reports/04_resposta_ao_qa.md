@@ -8,7 +8,7 @@ The audit (Antigravity with Gemini, read-only, on `main` at `9d5b635`) was check
 
 | ID | Finding | Status |
 |---|---|---|
-| D-01 | Repository is private (anonymous 404) | ⏸ Only the owner can change the visibility (GitHub → Settings → Danger Zone). Still required before submitting. |
+| D-01 | Repository is private (anonymous 404) | ✅ Made public by the owner; anonymous visits now return 200. |
 | D-02 / C-01 | `uv run pytest` fails 4 tests on `LANG=en_US.UTF-8` | ✅ Holiday names are loaded with `language="pt_BR"`; the suite passes under `en_US`. |
 | D-03 | `examples/03` states the forecast as the receipt date and the script answers unasked questions | ✅ Examples regenerated on the fixed code; §4.4 no longer applies to the regret right (see L-MED-03). |
 | D-07 | `HANDOFF.md` contradicts itself | ✅ §2 marked as "at handoff time"; §4 rewritten with the current state. |

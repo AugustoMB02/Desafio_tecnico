@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-This repo holds a take-home challenge (Artefact, AI Engineer): a LangGraph customer-service agent for a fictional instrument store. The inputs are under `data/` (CSVs, two PDFs, plus the curated `data/policies.md`). `PLAN.md` is the original plan, `Plan_Review.md` a verified review of it, and `HANDOFF.md` the decision defaults and step list the implementation followed. `README.md` (pt-BR) is the deliverable documentation; keep it in sync with the code.
+This repo holds a take-home challenge (Artefact, AI Engineer): a LangGraph customer-service agent for a fictional instrument store. The inputs are under `data/` (CSVs, two PDFs, plus the curated `data/policies.md`). `docs/PLAN.md` is the original plan, `docs/Plan_Review.md` a verified review of it, and `docs/HANDOFF.md` the decision defaults and step list the implementation followed. `README.md` (pt-BR) is the deliverable documentation; keep it in sync with the code.
 
 The full brief is in `data/desafio_tecnico_ai_eng_artefact.pdf`. Read it with `pdftotext -layout <file> -`. Everything in the brief and the data is in Portuguese (pt-BR), and the agent must answer customers in Portuguese.
 

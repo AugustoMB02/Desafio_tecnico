@@ -1,5 +1,7 @@
 # HANDOFF: Empório da Música agent (Artefact AI Engineer take-home)
 
+> **Status note:** this is the working handoff between AI sessions during development, kept for the record. Its instructions (next steps, when to stop) were for the implementation session and are complete; the delivered system is described in the [README](../README.md).
+
 Written 2026-11-03 for a fresh Claude Code cloud session working on branch `handoff/emporio-agent`.
 
 Read this file fully, then `PLAN.md` (the user's original plan) and `Plan_Review.md` (a verified review of that plan). The brief is `desafio_tecnico_ai_eng_artefact.pdf` and the store's policy manual is `políticas_da_loja.pdf`. The Read tool opens PDFs directly, or use `pdftotext -layout <file> -`.
@@ -86,15 +88,14 @@ The user hasn't chosen between the plan and the review. Implement these defaults
 
 ---
 
-## 4. Current state
+## 4. Final state
 
-*Updated 2026-11-03, 22:10 (Brasília), by the cloud session.*
+*Updated 2026-11-03, before delivery.*
 
-- **On `main`:** PR #1 merged the delivery branch; the user then added an external QA audit (`reports/00-03`, Antigravity/Gemini). The delivery branch `claude/emporio-agent-handoff-5gfkz8` carries the response: the confirmed findings fixed with regression tests (`tests/test_qa_fixes.py`), six red-team cases added to `evals/scenarios_dificeis.yaml`, examples regenerated, and `reports/04_resposta_ao_qa.md` mapping every finding to its status.
-- **Tests:** 220 unit tests pass (no LLM), also with `LANG=en_US.UTF-8`; ruff is clean.
-- **Live model:** `google_genai:gemini-3.5-flash` with the user's key (only in the gitignored `.env`).
-- **Optional branches, tested and pushed, not merged:** `feat/persistencia-sqlite`, `feat/web-ui-gradio`, `feat/persistencia-e-web` (both, 167 tests). They predate the QA fixes and the audit lists issues in them (D-04/D-05/D-06/D-10); merge only after addressing those.
-- **Needs the user:** the GitHub repository is still **private** (anonymous visits get 404); merge the delivery branch into `main` again for the QA fixes.
+- Every step of §5 is done and merged into `main`, including the response to the external QA audit (`reports/00-04`).
+- 221 unit tests pass (also with `LANG=en_US.UTF-8`); ruff is clean. Scenario runs on the final code: 24/24 (regression) and 30/30 (hard, with six red-team cases).
+- Live model for the examples and scenarios: `google_genai:gemini-3.5-flash`, the key available before the deadline; the README explains what would change in production.
+- The optional branches `feat/persistencia-sqlite`, `feat/web-ui-gradio` and `feat/persistencia-e-web` were not merged.
 
 ---
 

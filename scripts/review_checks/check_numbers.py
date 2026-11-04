@@ -1,4 +1,4 @@
-"""Recompute the numbers cited in Plan_Review.md from the raw CSVs.
+"""Recompute the numbers cited in docs/Plan_Review.md from the raw CSVs.
 
 Usage:
     python3 scripts/review_checks/check_numbers.py [DATA_DIR]
@@ -112,7 +112,7 @@ for o in orders:
         days = (dt.date.fromisoformat(o["estimated_delivery"]) - dt.date.fromisoformat(o["order_date"])).days
         print(f"  order {o['order_id']:>2} {customer_by_id[o['customer_id']]['city']:12s} {o['status']:9s} {days} days")
 
-print("\n== Orders dated after the reference dates PLAN.md suggests")
+print("\n== Orders dated after the reference dates docs/PLAN.md suggests")
 print(f"  latest order_date: {max(o['order_date'] for o in orders)}")
 for ref in ("2026-02-22", "2026-03-23"):
     print(f"  {ref}: {[o['order_id'] for o in orders if o['order_date'] > ref]}")

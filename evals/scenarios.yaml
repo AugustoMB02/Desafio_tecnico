@@ -1,4 +1,4 @@
-# Scripted scenarios for `uv run emporio-evals` (Plan_Review.md §6 plus the brief's four).
+# Scripted scenarios for `uv run emporio-evals` (docs/Plan_Review.md §6 plus the brief's four).
 #
 # Each turn may assert: tools / no_tools (tool names), tool_output (substrings of that turn's
 # tool outputs), reply_any (the reply contains at least one), reply_none (contains none).
