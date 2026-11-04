@@ -165,6 +165,7 @@ Alternativa considerada: colocar o manual inteiro no prompt (cabe folgado e fica
 ### Estratégia de prompt
 
 - Prompt de sistema em português, com a persona (seção 7.1), o fluxo de atendimento (7.2), as situações especiais (7.3) e regras explícitas: nunca afirmar preço/estoque/prazo sem ferramenta, copiar valores das ferramentas, não negociar preço, não citar loja parceira (o manual não lista nenhuma e o modelo inventaria), vocabulário (*guitarra* é elétrica, *violão* é acústico, *contrabaixo* é ambíguo), estilo WhatsApp (curto, sem tabelas, 3–5 opções e uma pergunta para afunilar).
+- **Várias perguntas na mesma mensagem:** responder cada uma, na ordem; numa reclamação com várias queixas, todas entram no resumo do chamado. **Fora do expediente,** o agente continua ajudando e avisa uma vez quando a equipe humana volta (seção 7.1).
 - **Estático primeiro, dinâmico por último:** data/hora, se a loja está aberta, feriado e status da verificação entram no fim, para não invalidar o cache a cada mensagem.
 - As ferramentas carregam instruções nos próprios dados quando isso é mais confiável que o prompt: `promocoes_encerradas` vem com "só mencione se o cliente perguntar", `alerta_dados` diz para não afirmar a marca da descrição, `categoria_sem_itens` diz que não é fora do escopo.
 
@@ -193,9 +194,28 @@ Um único `now()` injetável em `America/Campo_Grande`, com tempo real por padr�
 
 Dois de três dados (número do pedido, e-mail, telefone), conferidos **como combinação**: o e-mail `bruno.martins@jmail.com` pertence a dois clientes (11 e 43), e uma implementação ingênua ("acha o cliente pelo e-mail, depois compara o resto") ligaria a pessoa errada. Mensagens de falha são genéricas (não dizem qual dado errou), há limite de 3 tentativas por conversa e nome nunca é usado como fator. Em produção, o número do WhatsApp do remetente seria o fator natural de posse.
 
+### Atendimento humano: chamados
+
+O manual manda encaminhar para pessoas em vários casos — reclamação (retorno em até 24 horas úteis), dúvida sobre como aplicar uma política (gerência), exclusão de dados. Por isso o agente tem uma ferramenta própria, `open_ticket`, que registra devolução, troca, garantia, cancelamento, reclamação, interesse em produto sem estoque, pedido de LGPD ou pedido de atendente e devolve um protocolo. Ela só é chamada depois que o cliente confirma o resumo; vincular um pedido ou pedir exclusão de dados exige cliente verificado; e só a reclamação vem com prazo, porque é o único prazo que o manual dá. No protótipo os chamados vão para `.state/tickets.jsonl` (fora do git); em produção, para o sistema de atendimento da loja.
+
+### Avaliação: checagens em código antes de um LLM juiz
+
+Para um agente que fala de preço e prazo, os erros que importam são objetivos: um valor errado, uma ferramenta que não foi consultada, um dado pessoal exposto. Por isso a avaliação é feita por código — testes unitários com modelo falso para as regras e o grafo, e cenários roteirizados contra o modelo real, que conferem as ferramentas chamadas, termos proibidos ou obrigatórios e a origem de todo valor em R$. Um LLM juiz ficou de fora: os modelos atuais rejeitam `temperature`, e um juiz precisaria primeiro ser validado contra conversas rotuladas à mão. Em compensação, todas as transcrições foram lidas — foi assim que apareceram problemas que nenhuma checagem pegava. Resultados em [Testes e avaliação](#testes-e-avaliação).
+
 ## Suposições
 
-Onde o enunciado ou o manual são ambíguos, assumi (e o código cita a suposição onde ela é aplicada):
+Onde o enunciado, o manual ou os dados são ambíguos, assumi uma interpretação razoável e segui em frente, como o enunciado pede. O código cita a suposição onde ela é aplicada.
+
+**Sobre o enunciado**
+
+- **A. Quem o agente atende:** o enunciado fala em um agente que vai "auxiliar a equipe". Interpretei como um assistente que conversa direto com o cliente pelo canal de mensagens (o WhatsApp da seção 7 do manual) e passa para a equipe, por chamados, o que precisa de uma pessoa — não como uma ferramenta interna para os atendentes.
+- **B. Identificação do cliente:** o enunciado não diz como o cliente se identifica. Como um canal de mensagens não tem login, a conversa começa anônima e dados de pedido só aparecem depois da verificação por dois dados (número do pedido, e-mail, telefone).
+- **C. Idioma:** respostas sempre em português do Brasil, mesmo quando o cliente escreve em outra língua — a loja e o canal são brasileiros.
+- **D. Data de "hoje":** os pedidos vão de outubro/2025 a março/2026 e o agente usa a data real, então os prazos de devolução estão todos vencidos. Para mostrar uma regra de prazo ainda aberta, um dos exemplos usa uma data simulada, declarada no próprio arquivo.
+- **E. Equipe e chamados:** os materiais não incluem um sistema de atendimento. O que precisa de pessoa vira um chamado com protocolo num arquivo local, e o agente não promete prazos que o manual não dá.
+- **F. Uso dos dados:** o enunciado permite não usar todos os dados. Clientes e pedidos só servem para verificação e consulta de pedidos, e a descrição dos produtos com cadastro inconsistente não é usada (suposição 15).
+
+**Sobre o manual e os dados**
 
 1. **E-mail da loja:** o manual escreve `contato@emporiodamusica.com.br` (capa) e `contato@empóriodamusica.com.br` (1.2); uso a versão sem acento.
 2. **Dois telefones:** (67) 3341-4444 é o telefone da loja e (67) 3321-4500 é o WhatsApp de atendimento (seção 7).
@@ -289,7 +309,7 @@ Usei dois assistentes em fases alternadas — usando um para auditar o trabalho 
 | No plano | Na implementação | Motivo |
 |---|---|---|
 | SQLite FTS5/BM25 para as políticas | consulta por tópico sobre um `policies.md` curado | o FTS5 não devolvia nada para "Me arrependi da minha compra..." (sem *stemming* em português) |
-| Bedrock como principal + Ollama + fábrica de 4 provedores | provedor configurável por `MODEL` (`init_chat_model`) | IDs do plano aposentados; um revisor precisa de uma variável e uma chave |
+| Bedrock como principal + Ollama + fábrica de 4 provedores | provedor configurável por `MODEL` (`init_chat_model`); testes com o Gemini 3.5 Flash | os IDs do plano estavam aposentados, e a chave que eu tinha à mão no prazo era a do Gemini. **Em produção, AWS Bedrock ou um modelo local continuam sendo o alvo** ([O que mudaria em produção](#o-que-mudaria-em-produção)) |
 | Web chat FastAPI com gaveta de avaliação + CLI | CLI com `--trace`, `--now` e exportação em Markdown | o enunciado aceita CLI; o tempo foi para o agente e para os testes |
 | Login por OTP simulado + verificação 2-de-3 | só a verificação 2-de-3, com limite de tentativas | um código mostrado na tela não protege nada |
 | LLM juiz com `temperature=0` | cenários roteirizados com checagens em código | `temperature` é rejeitado; checagens determinísticas são reproduzíveis |
