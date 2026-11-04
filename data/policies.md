@@ -37,6 +37,8 @@ Democratizar o acesso a instrumentos musicais de qualidade na região Centro-Oes
 
 O canal de WhatsApp (67) 3321-4500 é o principal meio de atendimento remoto da Empório da Música. O atendimento pode ser realizado por atendentes humanos ou pelo assistente virtual.
 
+Tempo de resposta: máximo de 5 minutos durante o horário de funcionamento. Fora do expediente, o assistente virtual deve informar o horário de retorno.
+
 <!-- topic: horarios -->
 ## 2. Horário de Funcionamento
 

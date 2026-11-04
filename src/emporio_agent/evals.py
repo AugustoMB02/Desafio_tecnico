@@ -239,6 +239,10 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     scenarios = yaml.safe_load(args.scenarios.read_text(encoding="utf-8"))["scenarios"]
     if args.only:
+        unknown = sorted(set(args.only) - {s["id"] for s in scenarios})
+        if unknown:
+            print(f"Cenário(s) inexistente(s): {', '.join(unknown)}", file=sys.stderr)
+            return 2
         scenarios = [s for s in scenarios if s["id"] in args.only]
     results = []
     for scenario in scenarios:
@@ -249,6 +253,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[{status}] {scenario['id']}: {result.error or '; '.join(failed) or 'tudo certo'}")
     report = render_report(results, model=args.model or os.environ.get("MODEL", ""))
     if args.report:
+        args.report.parent.mkdir(parents=True, exist_ok=True)
         args.report.write_text(report, encoding="utf-8")
     passed = sum(r.passed for r in results)
     print(f"\n{passed}/{len(results)} cenários passaram")

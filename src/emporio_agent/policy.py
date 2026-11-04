@@ -30,7 +30,9 @@ PolicyTopic = Literal[
 TOPICS: tuple[str, ...] = get_args(PolicyTopic)
 
 TOPIC_SUMMARIES = {
-    "sobre_a_loja": "quem somos, endereço, CNPJ, telefone, WhatsApp, e-mail, o que vendemos",
+    "sobre_a_loja": (
+        "quem somos, endereço, CNPJ, telefone, WhatsApp e tempo de resposta, e-mail, o que vendemos"
+    ),
     "horarios": "horário de funcionamento da loja e do WhatsApp, feriados",
     "pagamento": "PIX, débito, crédito, boleto, regras de parcelamento, pagamento combinado",
     "trocas_devolucoes": "arrependimento, troca por defeito, troca por preferência, exceções",

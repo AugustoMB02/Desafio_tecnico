@@ -21,6 +21,10 @@ from .money import fmt_date
 ReturnReason = Literal["arrependimento", "defeito", "preferencia"]
 
 REGRET_DAYS = 7  # §4.1
+# ASSUMPTION: a customer-supplied receipt date more than this many days after the recorded
+# delivery forecast needs the team to confirm it with the carrier (tracking) before any
+# deadline is computed from it; otherwise a typed date could reopen a 10-month-old order.
+RECEIPT_TOLERANCE_DAYS = 10
 PREFERENCE_DAYS = 7  # §4.3
 DEFECT_EXCHANGE_DAYS = 30  # §4.2, from purchase
 LEGAL_WARRANTY_DAYS = 90  # §8.1, from receipt
@@ -76,6 +80,26 @@ def check_return(
             result["observacao"] = (
                 "se o cliente já recebeu, peça a data de recebimento e consulte de novo"
             )
+        return result
+
+    late_limit = (
+        order.estimated_delivery + timedelta(days=RECEIPT_TOLERANCE_DAYS)
+        if order.estimated_delivery
+        else None
+    )
+    if received_on is not None and late_limit is not None and received_on > late_limit:
+        result.update(
+            elegivel=None,
+            situacao=(
+                f"a data de recebimento informada ({fmt_date(received_on)}) fica muito "
+                f"depois da previsão registrada ({fmt_date(order.estimated_delivery)}); "
+                "a equipe precisa confirmar a entrega pelo rastreio antes de aplicar prazos"
+            ),
+            proximo_passo=(
+                "explicar com transparência e, se o cliente confirmar, abrir chamado para a "
+                "equipe verificar a entrega; não prometer devolução"
+            ),
+        )
         return result
 
     receipt = received_on or order.estimated_delivery

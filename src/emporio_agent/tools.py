@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from datetime import date, timedelta
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.tools import BaseTool, InjectedToolCallId, tool
@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field
 
 from . import catalog, orders, returns
 from .catalog import CategorySlug, PaymentMethod, StringsType
-from .clock import Clock, hours_on, store_status
+from .clock import Clock, hours_on, parse_day, store_status
 from .data import Order, Store
 from .policy import PolicyTopic, consult_policy
 from .returns import ReturnReason
@@ -43,20 +43,6 @@ class QuoteItem(BaseModel):
     quantity: int = Field(default=1, ge=1, description="quantidade")
 
 
-def _parse_day(text: str, today: date) -> date | None:
-    text = text.strip()
-    for parse in (
-        date.fromisoformat,
-        lambda t: date(*reversed([int(x) for x in t.split("/")])),  # dd/mm/aaaa
-        lambda t: date(today.year, *reversed([int(x) for x in t.split("/")])),  # dd/mm
-    ):
-        try:
-            return parse(text)
-        except (ValueError, TypeError):
-            continue
-    return None
-
-
 def catalog_tools(ctx: AgentContext) -> list[BaseTool]:
     store = ctx.store
 
@@ -71,6 +57,9 @@ def catalog_tools(ctx: AgentContext) -> list[BaseTool]:
         strings: Annotated[StringsType | None, "tipo de corda (violões e ukuleles)"] = None,
         electronics: Annotated[bool | None, "True = eletroacústico / com captação"] = None,
         limit: Annotated[int, "máximo de itens a devolver (1 a 10)"] = 5,
+        sort: Annotated[
+            Literal["menor_preco", "maior_preco"], "ordem por preço (maior_preco = mais caros)"
+        ] = "menor_preco",
     ) -> str:
         """Busca instrumentos DISPONÍVEIS no catálogo (ativos e com estoque), do mais barato
         para o mais caro, com preço, promoção ativa, preço no PIX e parcelamento máximo.
@@ -87,6 +76,7 @@ def catalog_tools(ctx: AgentContext) -> list[BaseTool]:
                 strings=strings,
                 electronics=electronics,
                 limit=limit,
+                sort=sort,
             )
         )
 
@@ -142,7 +132,7 @@ def store_info_tools(ctx: AgentContext) -> list[BaseTool]:
         now = ctx.clock.now()
         result: dict[str, Any] = {"agora": store_status(now).describe()}
         if day:
-            parsed = _parse_day(day, now.date())
+            parsed = parse_day(day, now.date(), prefer="future")
             if parsed is None:
                 result["dia_consultado"] = f"data não reconhecida: {day}"
             else:
@@ -211,6 +201,10 @@ def order_tools(ctx: AgentContext) -> list[BaseTool]:
             left = orders.MAX_VERIFICATION_ATTEMPTS - failures - 1
             payload = {"verificado": False, "mensagem": orders.GENERIC_FAILURE,
                        "tentativas_restantes": left}  # fmt: skip
+            if left <= 0:  # lockout also ends any earlier verification in this conversation
+                return _reply(
+                    tool_call_id, payload, verification_failures=1, verified_customer_id=None
+                )
             return _reply(tool_call_id, payload, verification_failures=1)
         customer = result.customer
         assert customer is not None
@@ -273,7 +267,7 @@ def service_tools(ctx: AgentContext) -> list[BaseTool]:
         today = ctx.clock.today()
         received = None
         if received_on:
-            received = _parse_day(received_on, today)
+            received = parse_day(received_on, today, prefer="past")
             if received is None:
                 return to_json({"erro": f"data não reconhecida: {received_on}"})
         return to_json(returns.check_return(store, order, today, reason, received))
@@ -293,6 +287,9 @@ def service_tools(ctx: AgentContext) -> list[BaseTool]:
         estoque, pedido LGPD ou pedido de atendente. Só chame DEPOIS que o cliente confirmar
         o resumo."""
         cid = state.get("verified_customer_id")
+        if kind == "lgpd" and not cid:  # data about a person: only that person may ask
+            return to_json({"erro": "pedido de LGPD exige o cliente verificado (dois dados: "
+                            "pedido, e-mail ou telefone) antes de abrir o chamado"})  # fmt: skip
         if order_id is not None and own_order(state, order_id) is None:
             return to_json({"erro": "para vincular um pedido, o cliente precisa estar verificado "
                             "e o pedido precisa ser dele"})  # fmt: skip
