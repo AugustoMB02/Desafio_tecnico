@@ -29,7 +29,7 @@ PREFERENCE_DAYS = 7  # §4.3
 DEFECT_EXCHANGE_DAYS = 30  # §4.2, from purchase
 LEGAL_WARRANTY_DAYS = 90  # §8.1, from receipt
 
-NOT_ELIGIBLE_ITEMS = [  # §4.4: confirm with the customer, the data cannot tell
+NOT_ELIGIBLE_ITEMS = [  # §4.4 (exchanges only): confirm with the customer
     "instrumento com personalização ou ajuste sob encomenda (setup, regulagem especial)",
     'compra em liquidação com aviso explícito de "venda final"',
 ]
@@ -132,7 +132,8 @@ def check_return(
                     "reembolso na mesma forma de pagamento em até 10 dias úteis",
                     "frete de devolução por conta da loja",
                 ],
-                verificar_com_cliente=NOT_ELIGIBLE_ITEMS,
+                # §4.4 lists items not eligible for *exchange*; the online regret right (§4.1,
+                # CDC art. 49) has no such exception, so it is not applied here.
                 proximo_passo="confirmar com o cliente e abrir chamado do tipo 'devolucao'",
             )
         else:

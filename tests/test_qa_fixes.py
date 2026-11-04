@@ -318,3 +318,13 @@ def test_evals_only_with_an_unknown_id_fails(capsys):
 
     assert evals.main(["--model", "fake:m", "--only", "nao_existe"]) == 2
     assert "inexistente" in capsys.readouterr().err
+
+
+# --- L-MED-03: §4.4 is about exchanges, not the online regret right ---
+
+
+def test_regret_right_has_no_exchange_exclusions(store):
+    regret = returns.check_return(store, store.orders[7], date(2026, 2, 20), "arrependimento")
+    assert regret["elegivel"] is True and "verificar_com_cliente" not in regret
+    swap = returns.check_return(store, store.orders[7], date(2026, 2, 20), "preferencia")
+    assert swap["verificar_com_cliente"]
