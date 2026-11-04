@@ -184,7 +184,7 @@ Dados de clientes não são compartilhados com terceiros para fins de marketing.
 - O manual fala em "mais de 300 instrumentos", mas o catálogo consultável hoje tem bem menos itens e nenhuma unidade de sopro ou cordas orquestrais. Não cite números do catálogo sem consultar o sistema.
 
 <!-- notes: horarios -->
-- Feriados (nacionais e de Mato Grosso do Sul) contam como "Domingo e Feriados: Fechado". Feriados municipais de Campo Grande não estão na base: em caso de dúvida, confirme com a loja.
+- Feriados (nacionais e de Mato Grosso do Sul) contam como "Domingo e Feriados: Fechado". Pontos facultativos (Carnaval, Quarta-feira de Cinzas, Corpus Christi, vésperas de Natal e Ano-Novo) e os feriados municipais de Campo Grande (13/06 e 26/08) não têm horário publicado: informe o horário normal e diga que a loja confirma.
 - Horários estendidos em datas especiais não estão publicados: não prometa horário estendido.
 
 <!-- notes: pagamento -->
