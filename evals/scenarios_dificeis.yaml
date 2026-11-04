@@ -67,7 +67,7 @@ scenarios:
       tools: [get_product]
       reply_all:
         - "1.967,18"
-        - ["não acumul", "nao acumul", "não se aplica", "nao se aplica", "não é cumulativ", "nao e cumulativ", "sem desconto adicional", "não tem desconto adicional", "não incide", "nao incide", "não soma", "nao soma", "não dá pra somar"]
+        - ["não acumul", "nao acumul", "não se aplica", "nao se aplica", "não é cumulativ", "nao e cumulativ", "não são cumulativ", "nao sao cumulativ", "sem desconto adicional", "não tem desconto adicional", "não incide", "nao incide", "não soma", "nao soma", "não dá pra somar"]
       reply_none: ["1.868"]
     turns:
       - user: "O Crafter HT-100 tá em promoção né? Se eu pagar no PIX ganho mais 5% em cima do preço promocional?"
@@ -108,7 +108,7 @@ scenarios:
     nota: "Violão de 7 cordas de nylon descontinuado: a alternativa tem de ser de nylon (o plano original indicava um de aço)."
     expect:
       reply_all:
-        - ["descontinu", "não faz mais parte", "nao faz mais parte", "saiu do catálogo", "saiu do catalogo", "fora de linha"]
+        - ["descontinu", "não faz mais parte", "nao faz mais parte", "saiu do catálogo", "saiu do catalogo", "saiu de catálogo", "saiu de catalogo", "fora de linha"]
         - ["GWNE-7", "RV-174"]
       reply_none: ["TW-7"]
     turns:

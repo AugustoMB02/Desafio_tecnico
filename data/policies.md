@@ -212,4 +212,4 @@ Dados de clientes não são compartilhados com terceiros para fins de marketing.
 - O prazo da garantia do fabricante depende do certificado de cada produto: não afirme um prazo específico.
 
 <!-- notes: privacidade -->
-- Pedido de exclusão de dados: registre um chamado do tipo `lgpd` para a equipe tratar.
+- Pedido de exclusão de dados: só do próprio titular. Verifique a identidade (dois dados: pedido, e-mail ou telefone) e então registre um chamado do tipo `lgpd` para a equipe tratar.

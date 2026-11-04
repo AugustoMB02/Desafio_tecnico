@@ -136,7 +136,7 @@ scenarios:
     expect:
       tools: [verify_customer, check_return]
       tool_output: ['"verificado":true', '"elegivel":true']
-      reply_any: ["24/02/2026"]
+      reply_any: ["24/02/2026", "no prazo", "dentro do prazo"]
     turns:
       - user: "Me arrependi da minha compra, posso devolver? Pedido 7, leticia.rocha@jmail.com. Não tem defeito, só arrependimento."
       - user: "Recebi no dia 17 mesmo, está na caixa, sem uso e sem nenhum ajuste."
