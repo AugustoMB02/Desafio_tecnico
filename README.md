@@ -160,7 +160,7 @@ Então:
 - `consult_policy(topics=[...])` recebe tópicos de uma lista fixa (`pagamento`, `trocas_devolucoes`...) e devolve as seções inteiras. O índice dos tópicos está no prompt.
 - As seções 7 (diretrizes de atendimento) e 10 (consultar a gerência em caso de dúvida) são instruções para quem atende, então foram para o **prompt de sistema**, não para a ferramenta.
 
-Alternativa considerada: colocar o manual inteiro no prompt (cabe folgado e ficaria em cache). Preferi a ferramenta porque o enunciado avalia justamente *saber quando consultar políticas*, e assim essa decisão aparece no trace e pode ser testada. Com um corpus grande, o próximo passo seria busca híbrida; aqui seria complexidade sem ganho.
+Alternativa considerada: colocar o manual inteiro no prompt (cabe folgado e ficaria em cache). Preferi a ferramenta porque assim a decisão de consultar o manual fica explícita: aparece no trace e pode ser testada. Com um corpus grande, o próximo passo seria busca híbrida; aqui seria complexidade sem ganho.
 
 ### Estratégia de prompt
 
@@ -171,7 +171,7 @@ Alternativa considerada: colocar o manual inteiro no prompt (cabe folgado e fica
 
 ### Interface: CLI
 
-O enunciado diz que o foco é o agente funcionando. O CLI tem `--trace` (mostra as ferramentas), `--now` (relógio congelado para demonstrações) e exporta a conversa em Markdown **com as chamadas de ferramenta**, que é o que gera os exemplos. Uma UI web ficou para depois (ver próximos passos).
+Concentrei o tempo no agente, e a interface é um CLI. Ele tem `--trace` (mostra as ferramentas), `--now` (relógio congelado para demonstrações) e exporta a conversa em Markdown **com as chamadas de ferramenta**, que é o que gera os exemplos. Uma UI web ficou para depois (ver próximos passos).
 
 ### Persistência do histórico
 
@@ -204,7 +204,7 @@ Para um agente que fala de preço e prazo, os erros que importam são objetivos:
 
 ## Suposições
 
-Onde o enunciado, o manual ou os dados são ambíguos, assumi uma interpretação razoável e segui em frente, como o enunciado pede. O código cita a suposição onde ela é aplicada.
+Onde o enunciado, o manual ou os dados são ambíguos, assumi uma interpretação razoável e segui em frente. O código cita a suposição onde ela é aplicada.
 
 **Sobre o enunciado**
 
@@ -310,7 +310,7 @@ Usei dois assistentes em fases alternadas — usando um para auditar o trabalho 
 |---|---|---|
 | SQLite FTS5/BM25 para as políticas | consulta por tópico sobre um `policies.md` curado | o FTS5 não devolvia nada para "Me arrependi da minha compra..." (sem *stemming* em português) |
 | Bedrock como principal + Ollama + fábrica de 4 provedores | provedor configurável por `MODEL` (`init_chat_model`); testes com o Gemini 3.5 Flash | os IDs do plano estavam aposentados, e a chave que eu tinha à mão no prazo era a do Gemini. **Em produção, AWS Bedrock ou um modelo local continuam sendo o alvo** ([O que mudaria em produção](#o-que-mudaria-em-produção)) |
-| Web chat FastAPI com gaveta de avaliação + CLI | CLI com `--trace`, `--now` e exportação em Markdown | o enunciado aceita CLI; o tempo foi para o agente e para os testes |
+| Web chat FastAPI com gaveta de avaliação + CLI | CLI com `--trace`, `--now` e exportação em Markdown | o tempo foi para o agente e para os testes |
 | Login por OTP simulado + verificação 2-de-3 | só a verificação 2-de-3, com limite de tentativas | um código mostrado na tela não protege nada |
 | LLM juiz com `temperature=0` | cenários roteirizados com checagens em código | `temperature` é rejeitado; checagens determinísticas são reproduzíveis |
 | relógio real + `REFERENCE_DATE` (sugestão: 22/02/2026) | relógio real + `--now`, que esconde os registros posteriores à data | na data sugerida, 8 pedidos apareceriam "do futuro" |
