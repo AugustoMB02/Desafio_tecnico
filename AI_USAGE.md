@@ -20,12 +20,12 @@ Instead of treating the AI assistant as an autonomous "one-shot code generator" 
 ## 2. Phase-by-Phase Log of How AI Was Used So Far
 
 ### Phase 0: Context Bootstrapping (`CLAUDE.md`)
-- **How AI was used:** Created [CLAUDE.md](file:///home/augusto/Desktop/Desafio_tecnico/CLAUDE.md) to establish persistent repository context from `desafio_tecnico_ai_eng_artefact.pdf` and `políticas_da_loja.pdf` (relational join keys, hard constraints like Python as primary language and `pt-BR` customer outputs, and deliverable rules such as incremental Git history without force-pushes).
+- **How AI was used:** Created [CLAUDE.md](CLAUDE.md) to establish persistent repository context from `desafio_tecnico_ai_eng_artefact.pdf` and `políticas_da_loja.pdf` (relational join keys, hard constraints like Python as primary language and `pt-BR` customer outputs, and deliverable rules such as incremental Git history without force-pushes).
 - **Why it mattered:** Prevented context drift across turns and ensured every subsequent action respected the challenge's non-negotiable constraints.
 
 ### Phase 1: Forensic Exploratory Data Analysis (EDA) & Policy Cross-Audit (`scripts/explore_data.py` & `PLAN.md`)
 - **Prompt / Direction given by Engineer:** Instructed the assistant not to write application code yet, but first to conduct a rigorous **data exploration phase** across all 6 CSVs and `políticas_da_loja.pdf`, recording, documenting, and justifying how the data should be organized and cleaned.
-- **How AI accelerated the work:** Generated and executed [scripts/explore_data.py](file:///home/augusto/Desktop/Desafio_tecnico/scripts/explore_data.py) to cross-check every row, foreign key, JSON schema, price calculation, and policy rule.
+- **How AI accelerated the work:** Generated and executed [scripts/explore_data.py](scripts/explore_data.py) to cross-check every row, foreign key, JSON schema, price calculation, and policy rule.
 - **Key traps uncovered through this audit:**
   1. **Expired promotion trap on a suggested prompt:** `Takamine GD20` (`product_id=95`, R\$ 2.199,00) has a 12% discount row in `promotions.csv` with `is_active=0` (`promotion_id=4`). A naive join without `is_active=1` violates Policy §7.3.
   2. **Availability vs. status traps on *"violões até R\$ 1.000"*:** `ID=96` (R\$ 799,90) has `status='active'` but `stock_quantity=0`; `ID=113` (R\$ 749,00) is `discontinued`; `ID=136` is `discontinued` *despite* `stock_quantity=13`; and `ID=101` (R\$ 1.049,00) drops to **R\$ 996,55 via the 5% PIX discount** (§3).
@@ -36,7 +36,7 @@ Instead of treating the AI assistant as an autonomous "one-shot code generator" 
 
 ### Phase 2: SOTA Literature Review & Evaluation Design (`PLAN.md`)
 - **Prompt / Direction given by Engineer:** Asked the assistant to conduct a literature review of the current State of the Art (2023–2026) to justify framework choices, data organization, retrieval strategy, and whether to use **LLM-as-a-Judge** or another evaluation approach.
-- **How AI accelerated the work:** Synthesized academic and industry benchmarks in [PLAN.md](file:///home/augusto/Desktop/Desafio_tecnico/PLAN.md):
+- **How AI accelerated the work:** Synthesized academic and industry benchmarks in [PLAN.md](PLAN.md):
   - **$\tau$-bench (Yao et al., 2024)** & **ReAct (Yao et al., 2023):** Showed why retail customer-service agents fail when arithmetic, discounts, or auth gates are left to LLM token prediction rather than deterministic tools.
   - **BIRD (Li et al., 2023) & CAREFUL / OWASP LLM Top 10 (2025):** Grounded the rejection of raw Text-to-SQL in favor of parameterized domain functions with server-side authorization state (`InjectedState`).
   - **Cache-Augmented Generation — CAG (Chan et al., WWW 2025):** Grounded why chunking an 8-page (~2,350-token) policy manual into a vector DB is an anti-pattern that severs tables (§3) from exception clauses (§3.1), justifying **Section-Aware Structured Markdown + SQLite FTS5 (`bm25`)** instead.
@@ -66,7 +66,7 @@ Rather than accepting the AI's initial draft plan as-is, I used the `/grill-me` 
 - **AI Coding Assistant (Antigravity):**
   - Wrote and ran the automated data-exploration script (`scripts/explore_data.py`) to surface all CSV/PDF edge cases and cross-table inconsistencies.
   - Compiled the SOTA literature review (ReAct, $\tau$-bench, CAG, BIRD/CAREFUL, G-Eval/Anthropic Evals) with citations and architectural trade-off matrices.
-  - Facilitated the structured `/grill-me` design tree walkthrough, checked local hardware specs (`nvidia-smi` / `lscpu`), and synthesized decisions into [PLAN.md](file:///home/augusto/Desktop/Desafio_tecnico/PLAN.md).
+  - Facilitated the structured `/grill-me` design tree walkthrough, checked local hardware specs (`nvidia-smi` / `lscpu`), and synthesized decisions into [PLAN.md](PLAN.md).
 
 ---
 

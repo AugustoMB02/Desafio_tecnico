@@ -81,6 +81,7 @@ The review also proposes a narrower scope with a cut line, safer tool signatures
 | 5 | While I commuted: re-read the brief, check the requirements, propose improvements and try them, on new branches if needed | Audited the brief (the repo was private and `main` lacked the work), merged `main` into the branch, rewrote the README's AI-usage section to match `AI_USAGE.md` and this log, fixed the eval harness, and built two optional features on separate branches | `9466b7a`, `4d9aa78`, `c9f883e`; branches `feat/persistencia-sqlite`, `feat/web-ui-gradio`, `feat/persistencia-e-web` |
 | 6 | Run more and harder examples, including several questions in one message | Wrote 24 hard scenarios, read every transcript, fixed three agent problems and some checker issues, and re-ran both scenario sets | `8a03afc`, `16da6fe`, `evals/report_dificeis.md` |
 | 7 | Check the README against the AI-usage files on `main` | Completed the README section with all the steering decisions in `AI_USAGE.md` and wrote this entry | — |
+| 8 | Address the QA reports that Antigravity (Gemini) wrote on `main` after a read-only audit | Reproduced each reported failing input before changing anything, fixed the confirmed ones with regression tests, turned six red-team conversations into scenarios, regenerated the examples and answered every finding | `reports/04_resposta_ao_qa.md`, `tests/test_qa_fixes.py` |
 
 ### How the work was checked
 
@@ -98,4 +99,5 @@ The review also proposes a narrower scope with a cut line, safer tool signatures
 ### Limits worth stating honestly
 
 - One model and a few runs per scenario: a sample, not a guarantee. Nothing was run against Claude; only its request payload was validated offline.
-- The five examples were generated at `b65c638`, before the last prompt changes. The scenario sets were re-run on the final code.
+- The five examples and both scenario sets were re-run on the code after the QA fixes.
+- Using a second model as an adversarial reviewer found real defects that the tests and scenarios written in this session had missed (e.g. a typed receipt date reopening an old order's return window). Some limits it found remain, listed with reasons in `reports/04_resposta_ao_qa.md`.
