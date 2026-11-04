@@ -31,7 +31,7 @@ INSTALLMENT_TIERS: tuple[tuple[int, int, Decimal], ...] = (
 
 # ASSUMPTION: only Campo Grande itself is treated as the metropolitan region (§5.1);
 # neighbouring municipalities get the "calculado pelo CEP" answer until confirmed.
-METRO_CITIES = frozenset({"campo grande"})
+METRO_CITIES = frozenset({"campo grande", "cg"})
 
 
 # --- Availability --------------------------------------------------------------------
@@ -138,7 +138,11 @@ class Shipping:
 
 
 def is_metro(city: str | None) -> bool:
-    return city is not None and normalize(city) in METRO_CITIES
+    """Campo Grande, also written "Campo Grande - MS", "Campo Grande/MS" or "CG"."""
+    if not city:
+        return False
+    name = re.sub(r"\b(ms|mato grosso do sul)\b", " ", normalize(city))
+    return " ".join(name.split()) in METRO_CITIES
 
 
 def needs_special_freight(store: Store, product: Product) -> bool:

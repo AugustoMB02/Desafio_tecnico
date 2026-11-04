@@ -1,8 +1,8 @@
 # Exemplo 1 — Violões até R$ 1.000 e parcelamento
 
 - **Modelo:** `google_genai:gemini-3.5-flash`
-- **Gerado em:** 03/11/2026 15:26 (horário de Campo Grande/MS)
-- **Commit:** `b65c638`
+- **Gerado em:** 03/11/2026 21:12 (horário de Campo Grande/MS)
+- **Commit:** `f1ebc16`
 - **Relógio:** tempo real
 
 Consulta ao catálogo em tempo real: só itens ativos e com estoque (o Giannini GF-3D, sem estoque, e o Shelby SN-7C, descontinuado, ficam de fora), refinamento por tipo de corda, parcelamento pelas faixas da seção 3.1 e frete de Campo Grande.
@@ -12,7 +12,7 @@ Consulta ao catálogo em tempo real: só itens ativos e com estoque (o Giannini 
 
 <details><summary>Ferramentas consultadas: <code>search_catalog</code></summary>
 
-- `search_catalog({"max_price_brl": 1000, "category": "violoes"})`
+- `search_catalog({"category": "violoes", "max_price_brl": 1000})`
 
   ```json
   {"total_encontrado":12,"itens":[{"id":83,"nome":"Tagima Memphis AC-39 Nylon Natural","categoria":"Violões","cordas":"nylon","eletroacustico":false,"descricao":"Violão clássico com cordas de nylon, perfeito para quem está começando. Corpo leve e confortável para longas sessões de estudo.","preco":"R$ 429,90","pix":"R$ 408,41 (5% de desconto à vista)","parcelamento":"até 5x de R$ 85,98 sem juros"},{"id":85,"nome":"Rozini RC-104 Nylon Estudante","categoria":"Violões","cordas":"nylon","eletroacustico":false,"descricao":"Violão clássico de estudo da Rozini, feito com madeiras nacionais. Acabamento caprichado e preço acessível para iniciantes.","preco":"R$ 459,90","pix":"R$ 436,91 (5% de desconto à vista)","parcelamento":"até 5x de R$ 91,98 sem juros"},{"id":89,"nome":"Shelby SN-100 Folk Aço Preto","categoria":"Violões","cordas":"aço","eletroacustico":false,"descricao":"Violão folk aço com visual moderno em preto. Indicado para quem busca um instrumento versátil com boa relação custo-benefício.","preco":"R$ 549,00","pix":"R$ 521,55 (5% de desconto à vista)","parcelamento":"até 6x de R$ 91,50 sem juros"},{"id":88,"nome":"Giannini GF-1R Aço Folk Sunburst","categoria":"Violões","cordas":"aço","eletroacustico":false,"descricao":"Violão folk com tampo em Spruce e acabamento Sunburst clássico. Som equilibrado e visual elegante para palco e estúdio.","preco":"R$ 579,90","pix":"R$ 550,91 (5% de desconto à vista)","parcelamento":"até 6x de R$ 96,65 sem juros"},{"id":81,"nome":"Yamaha C40 Nylon Natural","categoria":"Violões","cordas":"nylon","eletroacustico":false,"descricao":"Violão clássico com tampo em Spruce e fundo/laterais em Meranti. Ideal para estudantes e iniciantes, com excelente projeção sonora.","preco":"R$ 599,90","pix":"R$ 569,91 (5% de desconto à vista)","parcelamento":"até 6x de R$ 99,98 sem juros"}],"observacao":"Mostrando 5 de 12 (ordem: menor preço). Não liste tudo: pergunte o que o cliente prefere para refinar.","cabem_no_orcamento_so_no_pix":[{"id":101,"nome":"Giannini GNF-3 CEQ Elétrico Nylon Natural","categoria":"Violões","cordas":"nylon","eletroacustico":true,"descricao":"Violão eletroacústico nylon Giannini com equalizador de 4 bandas. Construção robusta e som amplificado de qualidade profissional.","preco":"R$ 1.049,00","pix":"R$ 996,55 (5% de desconto à vista)","parcelamento":"até 10x de R$ 104,90 sem juros"}]}
@@ -20,23 +20,27 @@ Consulta ao catálogo em tempo real: só itens ativos e com estoque (o Giannini 
 
 </details>
 
-**Empório da Música:** Olá! Temos ótimas opções de violões até R$ 1.000,00 disponíveis na loja. Veja algumas delas:  
+**Empório da Música:** Oi! Temos ótimas opções disponíveis até R$ 1.000 🎸  
   
-• **Tagima Memphis AC-39 (Nylon)**: R$ 429,90 (ou R$ 408,41 no PIX) — até 5x de R$ 85,98 sem juros  
-• **Rozini RC-104 Estudante (Nylon)**: R$ 459,90 (ou R$ 436,91 no PIX) — até 5x de R$ 91,98 sem juros  
-• **Shelby SN-100 Folk (Aço)**: R$ 549,00 (ou R$ 521,55 no PIX) — até 6x de R$ 91,50 sem juros  
-• **Giannini GF-1R Folk (Aço)**: R$ 579,90 (ou R$ 550,91 no PIX) — até 6x de R$ 96,65 sem juros  
-• **Yamaha C40 (Nylon)**: R$ 599,90 (ou R$ 569,91 no PIX) — até 6x de R$ 99,98 sem juros  
+Confira algumas delas:  
   
-*(Também temos o **Giannini GNF-3 CEQ Elétrico Nylon**, que custa R$ 1.049,00, mas cabe no seu orçamento pagando no PIX: R$ 996,55).*  
+- **Tagima Memphis AC-39 (Nylon):** R$ 429,90 (ou R$ 408,41 no PIX)  
+- **Rozini RC-104 Estudante (Nylon):** R$ 459,90 (ou R$ 436,91 no PIX)  
+- **Shelby SN-100 Folk (Aço):** R$ 549,00 (ou R$ 521,55 no PIX)  
+- **Giannini GF-1R Folk (Aço):** R$ 579,90 (ou R$ 550,91 no PIX)  
+- **Yamaha C40 (Nylon):** R$ 599,90 (ou R$ 569,91 no PIX)  
   
-Você prefere cordas de **nylon** ou **aço**? Se quiser, posso te ajudar a escolher o modelo ideal! 🎸
+*(Dica: se for pagar no PIX, o eletroacústico Giannini GNF-3 CEQ Nylon de R$ 1.049,00 sai por R$ 996,55)*  
+  
+Você prefere cordas de nylon ou de aço? E busca um modelo acústico ou elétrico (eletroacústico)?  
+  
+*Nota: No momento nossa loja física está fechada, mas posso ir te ajudando por aqui! Nossa equipe de atendimento retorna amanhã (quarta-feira) às 09:00.*
 
 **Cliente:** Sou iniciante, prefiro corda de nylon
 
 <details><summary>Ferramentas consultadas: <code>search_catalog</code></summary>
 
-- `search_catalog({"strings": "nylon", "category": "violoes", "max_price_brl": 1000})`
+- `search_catalog({"category": "violoes", "max_price_brl": 1000, "strings": "nylon"})`
 
   ```json
   {"total_encontrado":5,"itens":[{"id":83,"nome":"Tagima Memphis AC-39 Nylon Natural","categoria":"Violões","cordas":"nylon","eletroacustico":false,"descricao":"Violão clássico com cordas de nylon, perfeito para quem está começando. Corpo leve e confortável para longas sessões de estudo.","preco":"R$ 429,90","pix":"R$ 408,41 (5% de desconto à vista)","parcelamento":"até 5x de R$ 85,98 sem juros"},{"id":85,"nome":"Rozini RC-104 Nylon Estudante","categoria":"Violões","cordas":"nylon","eletroacustico":false,"descricao":"Violão clássico de estudo da Rozini, feito com madeiras nacionais. Acabamento caprichado e preço acessível para iniciantes.","preco":"R$ 459,90","pix":"R$ 436,91 (5% de desconto à vista)","parcelamento":"até 5x de R$ 91,98 sem juros"},{"id":81,"nome":"Yamaha C40 Nylon Natural","categoria":"Violões","cordas":"nylon","eletroacustico":false,"descricao":"Violão clássico com tampo em Spruce e fundo/laterais em Meranti. Ideal para estudantes e iniciantes, com excelente projeção sonora.","preco":"R$ 599,90","pix":"R$ 569,91 (5% de desconto à vista)","parcelamento":"até 6x de R$ 99,98 sem juros"},{"id":84,"nome":"Giannini GN-15 Nylon Cedr Natural","categoria":"Violões","cordas":"nylon","eletroacustico":false,"descricao":"Violão clássico Giannini com tampo em cedro. Sonoridade quente e encorpada, excelente custo-benefício para estudantes avançados.","preco":"R$ 689,00","pix":"R$ 654,55 (5% de desconto à vista)","parcelamento":"até 6x de R$ 114,83 sem juros"},{"id":82,"nome":"Yamaha C70 Nylon Natural","categoria":"Violões","cordas":"nylon","eletroacustico":false,"descricao":"Violão clássico de nível intermediário com tampo em Spruce sólido. Acabamento de alta qualidade e timbre equilibrado.","preco":"R$ 849,00","pix":"R$ 806,55 (5% de desconto à vista)","parcelamento":"até 8x de R$ 106,13 sem juros"}],"cabem_no_orcamento_so_no_pix":[{"id":101,"nome":"Giannini GNF-3 CEQ Elétrico Nylon Natural","categoria":"Violões","cordas":"nylon","eletroacustico":true,"descricao":"Violão eletroacústico nylon Giannini com equalizador de 4 bandas. Construção robusta e som amplificado de qualidade profissional.","preco":"R$ 1.049,00","pix":"R$ 996,55 (5% de desconto à vista)","parcelamento":"até 10x de R$ 104,90 sem juros"}]}
@@ -44,16 +48,16 @@ Você prefere cordas de **nylon** ou **aço**? Se quiser, posso te ajudar a esco
 
 </details>
 
-**Empório da Música:** Para quem está começando, as cordas de nylon são uma excelente escolha, pois são mais macias para os dedos!   
+**Empório da Música:** Excelente escolha! Para quem está começando, as cordas de nylon são super confortáveis para os dedos.  
   
-Aqui estão ótimas opções com nylon indicadas para iniciantes:  
+Separamos as melhores opções até R$ 1.000 para iniciantes:  
   
-• **Tagima Memphis AC-39 Nylon Natural**: R$ 429,90 (ou R$ 408,41 no PIX) — em até 5x de R$ 85,98 sem juros. Corpo leve e super confortável para estudar.  
-• **Rozini RC-104 Nylon Estudante**: R$ 459,90 (ou R$ 436,91 no PIX) — em até 5x de R$ 91,98 sem juros. Feito com madeiras nacionais, ótimo acabamento para iniciantes.  
-• **Yamaha C40 Nylon Natural**: R$ 599,90 (ou R$ 569,91 no PIX) — em até 6x de R$ 99,98 sem juros. Um clássico para estudantes, com boa projeção de som.  
-• **Giannini GN-15 Nylon Cedro Natural**: R$ 689,00 (ou R$ 654,55 no PIX) — em até 6x de R$ 114,83 sem juros. Tampo em cedro com sonoridade encorpada.  
+- **Tagima Memphis AC-39 Nylon:** R$ 429,90 (R$ 408,41 no PIX ou até 5x de R$ 85,98 sem juros). É bem leve e confortável para os estudos.  
+- **Rozini RC-104 Estudante Nylon:** R$ 459,90 (R$ 436,91 no PIX ou até 5x de R$ 91,98 sem juros). Feito com madeiras nacionais, ideal para iniciar.  
+- **Yamaha C40 Nylon:** R$ 599,90 (R$ 569,91 no PIX ou até 6x de R$ 99,98 sem juros). Um clássico para estudantes, com excelente projeção.  
+- **Giannini GN-15 Nylon Cedro:** R$ 689,00 (R$ 654,55 no PIX ou até 6x de R$ 114,83 sem juros). Tampo em cedro e sonoridade bem quente.  
   
-Algum destes chamou sua atenção? Se quiser simular o valor final com frete para sua cidade, é só me avisar!
+Algum desses modelos chamou mais sua atenção? Se quiser, posso calcular o orçamento completo com o frete para sua cidade!
 
 **Cliente:** Gostei do Yamaha C40. Em quantas vezes posso pagar? E no PIX fica quanto?
 
@@ -67,19 +71,22 @@ Algum destes chamou sua atenção? Se quiser simular o valor final com frete par
 
 </details>
 
-**Empório da Música:** Excelente escolha! O **Yamaha C40 Nylon Natural** é um instrumento incrível para começar.  
+**Empório da Música:** O **Yamaha C40 Nylon Natural** sai pelos seguintes valores:  
   
-As condições de pagamento para ele ficam assim:  
+- **No PIX:** R$ 569,91 (já com 5% de desconto, você economiza R$ 29,99)  
+- **No cartão de crédito:** R$ 599,90 em até **6x de R$ 99,98 sem juros**  
   
-• **No PIX**: R$ 569,91 à vista (com R$ 29,99 de desconto).  
-• **No cartão de crédito**: até 6x de R$ 99,98 sem juros (total de R$ 599,90).  
-  
-Se você me disser a sua cidade, posso calcular o frete para você também. Qual a sua cidade?
+Se quiser calcular o frete e o prazo de entrega, me diga em qual cidade você está! Precisa de mais alguma informação sobre ele?
 
 **Cliente:** Moro em Campo Grande, o frete é grátis?
 
-<details><summary>Ferramentas consultadas: <code>consult_policy</code></summary>
+<details><summary>Ferramentas consultadas: <code>quote</code>, <code>consult_policy</code></summary>
 
+- `quote({"city": "Campo Grande", "items": [{"product_id": 81, "quantity": 1}]})`
+
+  ```json
+  {"itens":[{"id":81,"nome":"Yamaha C40 Nylon Natural","quantidade":1,"valor":"R$ 599,90","valor_no_pix":"R$ 569,91 (5% de desconto)"}],"total":"R$ 599,90","total_no_pix":"R$ 569,91","economia_no_pix":"R$ 29,99","parcelamento_maximo":"6x de R$ 99,98 sem juros","frete":"grátis (motoboy próprio, 1 a 3 dias úteis)","total_com_frete":{"pagando no PIX":"R$ 569,91","outras formas":"R$ 599,90"}}
+  ```
 - `consult_policy({"topics": ["frete_entregas"]})`
 
   ```json
@@ -88,10 +95,12 @@ Se você me disser a sua cidade, posso calcular o frete para você também. Qual
 
 </details>
 
-**Empório da Música:** Sim, o frete é **grátis**!   
+**Empório da Música:** Sim, o frete é **grátis**! 🛵  
   
-Em Campo Grande, compras a partir de R$ 500,00 têm frete grátis. Como o Yamaha C40 sai por R$ 569,91 no PIX ou R$ 599,90 no cartão, você não paga nada pela entrega.  
+Como o valor do Yamaha C40 é superior a R$ 500,00 e você está em Campo Grande, a entrega é gratuita e feita por motoboy próprio no prazo de 1 a 3 dias úteis.  
   
-O prazo de entrega para Campo Grande é de **1 a 3 dias úteis**, entregue diretamente pelo nosso motoboy.  
+O valor final fica em:  
+- **R$ 569,91 no PIX**  
+- **R$ 599,90 no cartão** (até 6x de R$ 99,98 sem juros)  
   
-Posso te ajudar com mais alguma dúvida ou informação sobre o produto?
+Posso te ajudar com mais alguma dúvida sobre o instrumento ou sobre a compra?

@@ -36,10 +36,12 @@ def visible_orders(store: Store, today: date) -> dict[int, Order]:
 
 
 def normalize_phone(phone: str) -> str:
-    """Digits with DDD; accepts +55 and a bare 9-digit number (DDD 67 assumed)."""
+    """Digits with DDD: accepts +55, a trunk 0 before the DDD ("(067)", "+55 067") and a bare
+    9-digit number (DDD 67 assumed)."""
     d = digits(phone)
-    if len(d) == 13 and d.startswith("55"):
+    if len(d) >= 12 and d.startswith("55"):
         d = d[2:]
+    d = d.lstrip("0")
     if len(d) == 9:
         d = "67" + d
     return d
@@ -64,6 +66,7 @@ def verify(
     phone: str | None = None,
 ) -> VerificationResult:
     email = (email or "").strip().lower() or None
+    order_id = order_id if order_id and int(order_id) > 0 else None
     phone = normalize_phone(phone) if phone and digits(phone) else None
     factors = sum(x is not None for x in (order_id, email, phone))
     if factors < 2:

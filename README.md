@@ -6,7 +6,7 @@ Protótipo em Python de um agente de atendimento por mensagens de texto para a *
 
 O agente conversa em português no tom da loja ("um amigo que entende de música"), decide quando consultar **dados da operação** (catálogo, preços, promoções, estoque, pedidos) e quando consultar **políticas** (horários, pagamento, trocas, frete, garantia, LGPD), verifica a identidade do cliente antes de mostrar pedidos, calcula prazos de devolução e registra chamados para a equipe. Pedidos fora do escopo (acessórios, assuntos sem relação com a loja) são recusados com gentileza.
 
-**Avaliação rápida:** as [5 conversas em `examples/`](#exemplos-de-conversa) foram geradas pelo agente real e mostram, em cada resposta, as ferramentas consultadas com entrada e saída; `uv run pytest` roda os testes sem chave de API; com uma chave, `uv run emporio-agent --trace` abre o chat mostrando as chamadas de ferramenta, e [`evals/report.md`](evals/report.md) e [`evals/report_dificeis.md`](evals/report_dificeis.md) trazem as últimas rodadas dos 48 cenários roteirizados (24 de regressão e 24 difíceis).
+**Avaliação rápida:** as [5 conversas em `examples/`](#exemplos-de-conversa) foram geradas pelo agente real e mostram, em cada resposta, as ferramentas consultadas com entrada e saída; `uv run pytest` roda os testes sem chave de API; com uma chave, `uv run emporio-agent --trace` abre o chat mostrando as chamadas de ferramenta, e [`evals/report.md`](evals/report.md) e [`evals/report_dificeis.md`](evals/report_dificeis.md) trazem as últimas rodadas dos 54 cenários roteirizados (24 de regressão e 30 difíceis). Uma auditoria externa feita por outra IA e a resposta a cada achado estão em [`reports/`](reports/).
 
 - [Como rodar](#como-rodar)
 - [Exemplos de conversa](#exemplos-de-conversa)
@@ -15,6 +15,7 @@ O agente conversa em português no tom da loja ("um amigo que entende de música
 - [Suposições](#suposições)
 - [Testes e avaliação](#testes-e-avaliação)
 - [Limitações e próximos passos](#limitações-e-próximos-passos)
+- [O que mudaria em produção](#o-que-mudaria-em-produção)
 - [Uso de assistentes de código](#uso-de-assistentes-de-código)
 
 ---
@@ -52,7 +53,7 @@ Sem `MODEL` configurado o CLI para com uma mensagem clara (não existe modelo pa
 **Comandos de desenvolvimento:**
 
 ```bash
-uv run pytest                             # 158 testes, nenhum chama LLM
+uv run pytest                             # 221 testes, nenhum chama LLM
 uv run ruff check . && uv run ruff format --check .
 uv run emporio-evals --report evals/report.md   # cenários com o modelo real (gasta API)
 ```
@@ -107,6 +108,20 @@ Cada arquivo registra no cabeçalho o modelo, a data, o commit e o relógio usad
 
 Código em [`src/emporio_agent/`](src/emporio_agent): `data.py` (carga tipada), `rules.py` (regras de negócio), `catalog.py`, `orders.py`, `returns.py`, `policy.py`, `clock.py`, `tickets.py`, `tools.py`, `prompts.py`, `graph.py`, `llm.py`, `cli.py`, `evals.py`.
 
+**Organização do repositório**
+
+| Caminho | Conteúdo |
+|---|---|
+| [`src/emporio_agent/`](src/emporio_agent), [`tests/`](tests) | o agente e os testes unitários |
+| [`examples/`](examples) | as 5 conversas de exemplo e os roteiros que as geram |
+| [`evals/`](evals) | os cenários roteirizados (regressão e difíceis) e os relatórios das rodadas |
+| [`data/`](data) | as entradas do desafio (CSVs, manual, enunciado) e o `policies.md` curado |
+| [`AI_USAGE.md`](AI_USAGE.md) | como usei os assistentes de código, fase a fase |
+| [`reports/`](reports) | a auditoria externa (00–03) e a resposta a cada achado (04) |
+| [`docs/`](docs) | o plano original, a revisão do plano e o documento de passagem entre sessões |
+| [`scripts/`](scripts) | a EDA e os scripts que reproduzem os números citados na documentação |
+| [`CLAUDE.md`](CLAUDE.md) | contexto do repositório para o Claude Code |
+
 ## Decisões técnicas e justificativas
 
 ### Abordagem: function calling com ferramentas de domínio (não text-to-SQL, não RAG vetorial)
@@ -129,10 +144,10 @@ Antes de depender disso, um *spike* na versão instalada (`langgraph 1.2.19`) co
 
 O provedor é configurado por uma variável (`MODEL=provider:modelo`) via `init_chat_model` do LangChain; trocar de provedor é configuração, não código, e não existe modelo padrão escondido (os IDs mudam: os do plano original, Haiku 3.5 e Sonnet 4, já foram aposentados).
 
-Os exemplos e os cenários deste repositório rodaram com o **Gemini 3.5 Flash** (`google_genai:gemini-3.5-flash`, chave do Google AI Studio):
+Os exemplos e os cenários deste repositório rodaram com o **Gemini 3.5 Flash** (`google_genai:gemini-3.5-flash`, chave do Google AI Studio) **porque era a chave que eu tinha à mão no prazo — não é a escolha de produção.** Em produção eu usaria **AWS Bedrock ou um modelo local**, pela privacidade dos dados dos clientes; isso e o que mais mudaria estão em [O que mudaria em produção](#o-que-mudaria-em-produção). Para o protótipo:
 - um modelo da linha "Flash" basta: toda conta é feita no código, então o modelo só precisa escolher ferramentas, preencher argumentos e redigir em português — e responde rápido e barato, o que importa num atendimento por mensagem;
 - uso uma versão **datada e estável**, não um alias `-latest` (que muda sem aviso e tornaria os exemplos irreproduzíveis). Na hora de gerar os exemplos, os Flash mais novos (3.7 e 3.8) respondiam 503 por alta demanda;
-- foi a chave disponível no prazo. O Claude (`anthropic:claude-sonnet-5-5`, ou `claude-haiku-5-5` para custo menor) roda trocando a variável — o pacote já vem instalado e o formato da requisição foi validado offline —, mas os exemplos não foram gerados com ele.
+- trocar de modelo é trocar a variável: o Claude (`anthropic:claude-sonnet-5-5`, ou `claude-haiku-5-5` para custo menor) já vem instalado e o formato da requisição foi validado offline, mas os exemplos não foram gerados com ele.
 
 Detalhes que importam com os modelos atuais: **não envio `temperature`** (os Claude 5.x rejeitam valores diferentes do padrão e o Google recomenda manter o padrão nos Gemini 3; o wrapper do Gemini não envia temperatura para Gemini 3+ quando ela não é definida) nem `tool_choice` forçado; `MODEL_EFFORT` controla o "pensamento" padrão dos Claude 5.x (para chat, `low` costuma bastar); com Claude, o prompt estático é marcado para **prompt caching**.
 
@@ -199,20 +214,25 @@ Onde o enunciado ou o manual são ambíguos, assumi (e o código cita a suposiç
 15. **Cadastro inconsistente** (produtos 135–144): nome e preço valem; marca/especificação da descrição não são afirmadas.
 16. **`customers.city` pode não ser o endereço de entrega** (pedidos de Campo Grande têm prazos e rastreio de Correios); para pedidos existentes, rastreio e previsão são informados como registrados.
 17. **Totais de pedidos antigos** são informados como registrados, sem recalcular com as regras atuais (alguns pedidos antigos violam a 3.1 ou têm totais menores que o preço de tabela).
-18. **Relógio:** tempo real em `America/Campo_Grande`, feriados nacionais e de MS; feriados municipais não estão na base.
+18. **Relógio:** tempo real em `America/Campo_Grande`, com feriados nacionais e de MS (nomes sempre em português, independentemente do idioma do sistema).
+19. **Dias incertos:** Carnaval, Quarta-feira de Cinzas, Corpus Christi, vésperas de Natal e Ano-Novo e os feriados municipais de Campo Grande (13/06, Santo Antônio, e 26/08, aniversário da cidade) são informados com o horário normal e o aviso de que a loja confirma.
+20. **Data de recebimento informada pelo cliente:** se ficar mais de 10 dias depois da previsão registrada, a equipe confirma a entrega pelo rastreio antes de qualquer prazo ser aplicado (uma data digitada não reabre um pedido antigo).
+21. **Exceções da seção 4.4** (personalização, "venda final", boquilhas) valem para trocas; o direito de arrependimento da compra online (4.1) não tem essas exceções.
+22. **Pedido de exclusão de dados (LGPD)** só é registrado para o próprio titular, depois da verificação de identidade.
 
 ## Testes e avaliação
 
-- **158 testes unitários** (`uv run pytest`, ~2 s, sem LLM): preços e promoções fixados nos valores conferidos à mão (Takamine GD20: R$ 2.199,00 / PIX R$ 2.089,05 / 12x R$ 183,25; os 12 violões até R$ 1.000; os 8 casos de meio centavo), parcelas, frete, disponibilidade, alertas de cadastro, fidelidade do `policies.md` ao PDF, feriados, verificação (colisão de e-mail, bloqueio após 3 tentativas, chutes paralelos), prazos de devolução nas bordas, chamados. O grafo do LangGraph é testado de ponta a ponta com um **modelo falso roteirizado**.
+- **221 testes unitários** (`uv run pytest`, ~2 s, sem LLM, também com o sistema em inglês): preços e promoções fixados nos valores conferidos à mão (Takamine GD20: R$ 2.199,00 / PIX R$ 2.089,05 / 12x R$ 183,25; os 12 violões até R$ 1.000; os 8 casos de meio centavo), parcelas, frete, disponibilidade, alertas de cadastro, fidelidade do `policies.md` ao PDF, feriados, verificação (colisão de e-mail, bloqueio após 3 tentativas, chutes paralelos), prazos de devolução nas bordas, chamados. O grafo do LangGraph é testado de ponta a ponta com um **modelo falso roteirizado**.
 - **Cenários roteirizados** (`uv run emporio-evals`, [`evals/scenarios.yaml`](evals/scenarios.yaml)): 24 conversas com o modelo real — as 4 do enunciado e casos difíceis (guitarra × violão, contrabaixo acústico, saxofone, acessórios, pedido de desconto, Black Friday, cadastro inconsistente, injeção de prompt, LGPD, feriado, fora do horário, carrinho misto, enumeração de pedidos, e-mail compartilhado). As checagens são código, não um LLM juiz: ferramentas chamadas, conteúdo das saídas, termos proibidos/obrigatórios na resposta (por turno ou na conversa inteira) e **todo valor em R$ da resposta precisa ter saído de uma ferramenta** (ou da fala do cliente). O relatório registra também o tempo de resposta de cada mensagem.
-- **Resultados com o Gemini 3.5 Flash** ([`evals/report.md`](evals/report.md), última rodada): **24 de 24 cenários passaram**; tempo de resposta por mensagem com mediana de 5,2 s e p90 de 8,7 s (incluindo as chamadas de ferramenta). Até chegar lá: a primeira rodada passou 20 de 23, e as três falhas eram do próprio avaliador (um "12%" que casava com "12x" e expectativas presas ao turno errado); a segunda passou 23 de 24, e a falha restante (o agente não mencionava os baixos elétricos ao dizer que não há contrabaixo acústico) virou um ajuste de prompt.
-- **Cenários difíceis** ([`evals/scenarios_dificeis.yaml`](evals/scenarios_dificeis.yaml), relatório em [`evals/report_dificeis.md`](evals/report_dificeis.md)): mais 24 conversas feitas para quebrar o agente —
+- **Resultados com o Gemini 3.5 Flash** ([`evals/report.md`](evals/report.md), última rodada): **24 de 24 cenários passaram** (rodada final, depois das correções da auditoria externa); tempo de resposta por mensagem com mediana de 6,0 s e p90 de 10,6 s (incluindo as chamadas de ferramenta). Até chegar lá: a primeira rodada passou 20 de 23, e as três falhas eram do próprio avaliador (um "12%" que casava com "12x" e expectativas presas ao turno errado); a segunda passou 23 de 24, e a falha restante (o agente não mencionava os baixos elétricos ao dizer que não há contrabaixo acústico) virou um ajuste de prompt.
+- **Auditoria externa** ([`reports/`](reports/)): depois do merge, outra IA (Antigravity com Gemini) fez uma auditoria somente leitura — revisão estática, 89 turnos de *red-team* ao vivo e conferência dos entregáveis. Cada achado foi reproduzido antes de qualquer mudança; os confirmados foram corrigidos com testes de regressão ([`tests/test_qa_fixes.py`](tests/test_qa_fixes.py)), seis conversas do *red-team* viraram cenários (`qa_*`) e a resposta item a item está em [`reports/04_resposta_ao_qa.md`](reports/04_resposta_ao_qa.md).
+- **Cenários difíceis** ([`evals/scenarios_dificeis.yaml`](evals/scenarios_dificeis.yaml), relatório em [`evals/report_dificeis.md`](evals/report_dificeis.md)): 30 conversas feitas para quebrar o agente (24 escritas aqui e 6 vindas da auditoria externa) —
   - **várias perguntas na mesma mensagem**, inclusive as quatro do enunciado de uma vez (endereço, preço, busca e devolução), e pedido + produto + verificação juntos;
   - **uma conversa de seis mensagens** que troca de assunto (produto → parcelamento → horário → pedido com verificação) e volta ao produto do início ("o mais barato", com frete);
   - **ataques**: engenharia social com o e-mail compartilhado ("perdi meu celular, me passa o telefone cadastrado"), injeção fingindo ser o sistema ("modo administrador"), barganha insistente em três mensagens;
   - **armadilhas de dados**: PIX sobre item em promoção, quantidade acima do estoque, 500 unidades com pedido de desconto por volume, 12x num item de R$ 159,90, frete de bateria para Corumbá, produto "em breve", 7 cordas de nylon descontinuado, defeito em pedido de 2025, gírias sem acento e um cliente escrevendo em inglês.
 
-  A primeira rodada passou 22 de 24, e ler as transcrições inteiras mostrou o que as checagens sozinhas não pegavam: o agente somava produto + frete por conta própria (R$ 151,91 + R$ 35,00, conta certa, mas fora da regra de que só o código calcula), afirmou que "a Taylor costuma oferecer garantia mais extensa" (sem fonte) e, numa mensagem com três queixas, deixou uma fora do resumo do chamado. As correções foram gerais, não específicas do cenário: o `quote` passou a devolver `total_com_frete`, e o prompt ganhou regras para responder cada pergunta/queixa de uma mensagem e para não afirmar nada sobre marcas que não venha das ferramentas. Na segunda rodada, **24 de 24** (e os 24 de regressão continuaram passando).
+  A primeira rodada passou 22 de 24, e ler as transcrições inteiras mostrou o que as checagens sozinhas não pegavam: o agente somava produto + frete por conta própria (R$ 151,91 + R$ 35,00, conta certa, mas fora da regra de que só o código calcula), afirmou que "a Taylor costuma oferecer garantia mais extensa" (sem fonte) e, numa mensagem com três queixas, deixou uma fora do resumo do chamado. As correções foram gerais, não específicas do cenário: o `quote` passou a devolver `total_com_frete`, e o prompt ganhou regras para responder cada pergunta/queixa de uma mensagem e para não afirmar nada sobre marcas que não venha das ferramentas. Na segunda rodada, **24 de 24**. Depois da auditoria externa o conjunto ganhou 6 casos do *red-team* (data de recebimento forjada, LGPD de terceiro, feriado municipal, "Campo Grande - MS", instrumento mais caro, tempo de resposta do WhatsApp), e a rodada final no código corrigido passou **30 de 30** (mediana de 7,9 s por mensagem).
 
 As respostas de um LLM variam entre execuções: cada rodada é uma amostra, não uma garantia. Os relatórios trazem as conversas completas para conferir o comportamento, não só o placar.
 
@@ -222,30 +242,47 @@ As respostas de um LLM variam entre execuções: cada rodada é uma amostra, nã
 - Os exemplos e os cenários rodaram com um único modelo (Gemini 3.5 Flash). As respostas variam de uma execução para outra, e outro modelo pode pedir ajustes no prompt.
 - Histórico só em memória: fechar o CLI perde a conversa. Não há corte de histórico para conversas muito longas.
 - A base não tem endereço de entrega, canal de compra (online/loja) nem data real de entrega; as regras de devolução usam as suposições 8 e 16.
-- Feriados municipais de Campo Grande e horários estendidos de datas especiais não estão na base.
+- Horários estendidos de datas especiais não estão na base, e os dias incertos (pontos facultativos e feriados municipais) só recebem um aviso para confirmar com a loja.
+- Algumas regras de segurança ainda dependem do prompt, não do código: pedir confirmação antes de abrir um chamado e não trocar de cliente verificado no meio da conversa. Outros pontos conhecidos (pagamento combinado PIX + cartão, crescimento do histórico, trava do arquivo de chamados entre processos, limites do verificador de valores) estão listados em [`reports/04_resposta_ao_qa.md`](reports/04_resposta_ao_qa.md).
 - A busca por nome é por correspondência de texto (tolera acento, hífen e espaço, ex. "takamine gd 20"), não semântica: "violão bom para fingerstyle" depende do modelo traduzir para filtros.
 - Os chamados vão para um arquivo local; não há integração com um sistema de atendimento real.
 - A verificação conversacional é fraca por natureza (e-mail e número de pedido são semi-públicos); o limite de tentativas reduz, não elimina, o risco.
 
 **Com mais tempo**
 1. Rodar os cenários várias vezes e com outros modelos (Claude Haiku/Sonnet, Gemini Pro) para medir taxa de acerto (pass^k) e latência, e ajustar o prompt pelos erros.
-2. UI web em Python puro (Chainlit ou Gradio) mostrando as ferramentas chamadas.
-3. Persistência com `SqliteSaver` e política de retenção; integração com o WhatsApp Business (o número do remetente como fator de verificação).
-4. Chamados num sistema real (helpdesk) e notificação da equipe.
-5. LLM como juiz só para tom/empatia, validado contra conversas rotuladas à mão, com um modelo diferente do agente.
-6. Confirmar com a loja as suposições 3, 4, 8 e 11 (são as que mudam respostas).
+2. Levar para produção o que está na seção seguinte (modelo na AWS ou local, WhatsApp, banco de dados, sistema de chamados, segurança e observabilidade).
+3. Uma interface web: há um protótipo com Gradio e um com conversas que persistem entre sessões em ramos opcionais (`feat/web-ui-gradio`, `feat/persistencia-sqlite`), que precisam dos ajustes apontados na auditoria antes de entrar.
+4. LLM como juiz só para tom/empatia, validado contra conversas rotuladas à mão, com um modelo diferente do agente.
+5. Confirmar com a loja as suposições 3, 4, 8 e 11 (são as que mudam respostas).
+
+## O que mudaria em produção
+
+Este repositório é um protótipo para o desafio. Algumas escolhas foram feitas pelo prazo ou pelo que eu tinha à mão; num ambiente de produção elas seriam diferentes:
+
+| Tema | No protótipo | Em produção |
+|---|---|---|
+| **Modelo e provedor** | Gemini 3.5 Flash pela API do Google AI Studio — era a chave disponível no prazo | **AWS Bedrock** (Claude ou outro modelo do catálogo, com IAM, rede privada e logs na conta da empresa) **ou um modelo local** (Ollama/vLLM em servidor próprio, com os dados sem sair da infraestrutura da loja) — a direção do plano original, por privacidade e LGPD. Na AWS, a região importa: se a inferência acontecer fora do Brasil, a transferência internacional de dados precisa de base legal (LGPD, art. 33). No código, é trocar `MODEL` e instalar o pacote do provedor (`langchain-aws` ou `langchain-ollama`); antes, os dois conjuntos de cenários rodariam no modelo escolhido, já que modelos locais menores tendem a errar mais chamadas de ferramenta em português |
+| **Canal** | CLI no terminal | WhatsApp Business (API oficial, via *webhook*); o número do remetente vira o identificador da conversa e um fator de posse na verificação |
+| **Dados** | CSVs carregados em memória | Consultas somente leitura ao ERP/banco da loja, com credencial de serviço de privilégio mínimo; preço e estoque em tempo real |
+| **Histórico e verificação** | Em memória, durante a sessão | Conversas em banco (ex.: Postgres) por número de telefone, verificação que expira, política de retenção e exclusão (LGPD) e resumo de conversas longas |
+| **Chamados** | Arquivo `.state/tickets.jsonl` | Integração com o sistema de atendimento (helpdesk/CRM), com fila, notificação da equipe e prazos de retorno reais |
+| **Segurança** | Chave em `.env`; algumas regras só no prompt | Segredos num cofre (ex.: AWS Secrets Manager); limite de mensagens por número; as regras que hoje dependem do prompt (confirmar antes de abrir chamado, não trocar de cliente verificado) passam para o código; código de verificação real por SMS/e-mail para operações sensíveis |
+| **Operação** | Logs no terminal (`--trace`) | Rastreamento de cada chamada de ferramenta, latência e custo por conversa (ex.: OpenTelemetry/LangSmith), *timeouts*, modelo de reserva se o provedor cair e *cache* de prompt |
+| **Qualidade** | Cenários rodados à mão, uma vez por mudança | Cenários no CI a cada mudança de prompt ou de modelo, várias execuções por cenário (*pass^k*), e uma amostra de conversas reais revisada por pessoas |
+| **Informação da loja** | Avisos genéricos para feriados municipais, horários especiais e frete fora de Campo Grande | Calendário da loja e cotação de frete por CEP (Correios/Jadlog) vindos das fontes reais |
 
 ## Uso de assistentes de código
 
-Usei dois assistentes em fases alternadas — usando um para auditar o trabalho do outro — e mantive comigo as decisões de escopo, arquitetura e *merge*. Os registros detalhados (em inglês) estão em [`AI_USAGE.md`](AI_USAGE.md) (planejamento e auditoria multiagente no Antigravity) e [`AI_USAGE_LOG.md`](AI_USAGE_LOG.md) (diário cronológico por sessão: revisão do plano, implementação na nuvem e *red-teaming* independente). O [`CLAUDE.md`](CLAUDE.md), gerado com o `/init` do Claude Code, serviu de contexto comum para os dois assistentes (restrições do enunciado, esquema dos dados, armadilhas conhecidas).
+Usei dois assistentes em fases alternadas — usando um para auditar o trabalho do outro — e mantive comigo as decisões de escopo, arquitetura e *merge*. O registro detalhado e cronológico (em inglês) está em [`AI_USAGE.md`](AI_USAGE.md). O [`CLAUDE.md`](CLAUDE.md), gerado com o `/init` do Claude Code, serviu de contexto comum para os dois assistentes (restrições do enunciado, esquema dos dados, armadilhas conhecidas).
 
 1. **Planejamento com o Antigravity** (ambiente agêntico do Google DeepMind):
    - **dados antes de código:** uma EDA forense ([`scripts/explore_data.py`](scripts/explore_data.py)) cruzou os 6 CSVs com o manual e encontrou as armadilhas da base — a promoção expirada do Takamine GD20, o violão ativo sem estoque, o baixo descontinuado com estoque, o item que só cabe em R$ 1.000 no PIX, o e-mail compartilhado por dois clientes e as contradições internas do PDF;
-   - **plano discutido decisão por decisão** (`/grill-me`; [`PLAN.md`](PLAN.md), com revisão de literatura), em que troquei várias sugestões iniciais da IA por decisões minhas: LangGraph no lugar de PydanticAI; privacidade dos dados com modelo local (Ollama na GPU) + AWS Bedrock no lugar de APIs públicas; uma interface web pensada para o cliente; login com código (OTP simulado) além da verificação 2-de-3; relógio real com *override* explícito no lugar de uma data fixa no passado. Parte dessas decisões mudou depois da revisão do passo 2, por motivos que estão na tabela abaixo.
-2. **Revisão adversarial com o Claude Code** (CLI, local): pedi que ele tentasse **derrubar o meu plano com scripts reproduzíveis** em vez de só comentá-lo ([`Plan_Review.md`](Plan_Review.md), [`scripts/review_checks/`](scripts/review_checks)). Ele confirmou a EDA e encontrou problemas reais: a busca FTS5 planejada não achava a pergunta do próprio enunciado, os IDs de modelo do plano estavam aposentados e `temperature=0` é rejeitado pelos modelos atuais, `float` e `Decimal` divergiam em um centavo em 8 preços no PIX, a data de referência sugerida exporia 8 pedidos "do futuro", uma sétima inconsistência de cadastro (ID 136) e uma alternativa de corda de nylon trocada por aço. Também conferiu as citações do plano na web: uma estava com o ano e o tema errados, e outras sustentavam afirmações que as fontes não fazem. Em seguida preparou um documento de passagem ([`HANDOFF.md`](HANDOFF.md)) com decisões padrão — reversíveis e sinalizadas — onde plano e revisão discordavam.
+   - **plano discutido decisão por decisão** (`/grill-me`; [`PLAN.md`](docs/PLAN.md), com revisão de literatura), em que troquei várias sugestões iniciais da IA por decisões minhas: LangGraph no lugar de PydanticAI; privacidade dos dados com modelo local (Ollama na GPU) + AWS Bedrock no lugar de APIs públicas; uma interface web pensada para o cliente; login com código (OTP simulado) além da verificação 2-de-3; relógio real com *override* explícito no lugar de uma data fixa no passado. Parte dessas decisões mudou depois da revisão do passo 2, por motivos que estão na tabela abaixo.
+2. **Revisão adversarial com o Claude Code** (CLI, local): pedi que ele tentasse **derrubar o meu plano com scripts reproduzíveis** em vez de só comentá-lo ([`Plan_Review.md`](docs/Plan_Review.md), [`scripts/review_checks/`](scripts/review_checks)). Ele confirmou a EDA e encontrou problemas reais: a busca FTS5 planejada não achava a pergunta do próprio enunciado, os IDs de modelo do plano estavam aposentados e `temperature=0` é rejeitado pelos modelos atuais, `float` e `Decimal` divergiam em um centavo em 8 preços no PIX, a data de referência sugerida exporia 8 pedidos "do futuro", uma sétima inconsistência de cadastro (ID 136) e uma alternativa de corda de nylon trocada por aço. Também conferiu as citações do plano na web: uma estava com o ano e o tema errados, e outras sustentavam afirmações que as fontes não fazem. Em seguida preparou um documento de passagem ([`HANDOFF.md`](docs/HANDOFF.md)) com decisões padrão — reversíveis e sinalizadas — onde plano e revisão discordavam.
 3. **Implementação com o Claude Code** (sessão na nuvem), seguindo o `HANDOFF.md` em commits pequenos: cada regra veio com testes fixados em valores conferidos à mão, e os comportamentos do LangGraph que o desenho usa foram confirmados num *spike* na versão instalada antes de o código depender deles. As decisões continuaram comigo: o ritmo (parar depois da estrutura, depois seguir), o provedor dos testes reais (Gemini, a chave disponível no prazo), o que fica no ramo de entrega e o que fica em ramos opcionais (persistência e chat web) e o pedido de cenários mais difíceis, com várias perguntas na mesma mensagem.
 4. **Conversas reais e correções:** as primeiras transcrições com o Gemini mostraram problemas que os testes com modelo falso não pegam — o modelo inventava detalhes de produto (ex.: "tarraxas douradas" num violão cuja descrição não diz isso), afirmava a previsão de entrega como data de recebimento e, depois de um feriado, dizia vagamente que a loja "volta ao normal no dia seguinte". A correção foi nas ferramentas e no prompt (commit `2d65a27`): a busca passou a trazer a descrição do catálogo, o prompt limita afirmações de produto ao que as ferramentas devolvem e exige confirmar a data de recebimento, e o horário de um dia fechado passou a informar a próxima abertura. Os exemplos foram gerados de novo. Depois, os 24 cenários difíceis acharam mais três problemas — o modelo somava produto + frete por conta própria, afirmou sem fonte que uma marca "costuma oferecer garantia mais extensa" e esqueceu uma queixa num chamado — também corrigidos (commit `16da6fe`); os cenários revelaram ainda alguns erros no próprio avaliador, que foram corrigidos.
 5. **Auditoria independente e *red-teaming* multiagente com o Antigravity ([`reports/`](reports/)):** como o mesmo assistente (Claude Code) havia escrito o código e os 48 cenários de avaliação, voltei ao **Antigravity** depois do *merge* no `main` com a instrução explícita de **testar o sistema inteiro, usar múltiplos agentes e não corrigir nada antes de documentar os achados**. Três subagentes rodaram em paralelo sobre a árvore em modo somente leitura (auditoria estática das 16 unidades de código e do PDF, 89 turnos ao vivo de *red-teaming* adversarial e consistência `pass^3` no Gemini 3.5 Flash, e auditoria dos entregáveis e ramos opcionais). Essa verificação cruzada pegou o que o ambiente do primeiro assistente escondia: a dependência implícita de *locale* em `holidays.Brazil` (que quebrava 4 testes em máquinas `en_US.UTF-8`), datas `dd/mm/aa` lidas como ano `0026 d.C.`, *spoofing* de `received_on` aprovando devoluções de pedidos antigos, abertura de chamado LGPD de terceiros sem verificação no 1º turno, a omissão do SLA de 5 minutos (§7.1) do manual, descrições inconsistentes indexadas na busca e uma resposta a pergunta não feita em `examples/03_arrependimento_devolucao.md` — tudo consolidado em [`reports/00_executive_qa_summary.md`](reports/00_executive_qa_summary.md) para triagem humana antes das correções.
+6. **Correções a partir da auditoria, com o Claude Code:** pedi que cada achado fosse reproduzido antes de qualquer mudança — os principais se confirmaram todos. Os confirmados foram corrigidos com testes de regressão ([`tests/test_qa_fixes.py`](tests/test_qa_fixes.py)), seis conversas do *red-team* viraram cenários (`qa_*` em [`evals/scenarios_dificeis.yaml`](evals/scenarios_dificeis.yaml)), os exemplos foram gerados de novo, e a resposta item a item — inclusive o que ficou de fora e por quê — está em [`reports/04_resposta_ao_qa.md`](reports/04_resposta_ao_qa.md). Na rodada final, os 221 testes passam (também com o sistema em inglês) e os cenários passam 24 de 24 e 30 de 30.
 
 **O que mudou do plano para a implementação, e por quê** (detalhes nas seções acima e no `Plan_Review.md`):
 

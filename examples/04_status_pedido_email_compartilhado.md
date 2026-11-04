@@ -1,8 +1,8 @@
 # Exemplo 4 — Status do pedido com e-mail compartilhado entre dois clientes
 
 - **Modelo:** `google_genai:gemini-3.5-flash`
-- **Gerado em:** 03/11/2026 15:27 (horário de Campo Grande/MS)
-- **Commit:** `b65c638`
+- **Gerado em:** 03/11/2026 21:13 (horário de Campo Grande/MS)
+- **Commit:** `f1ebc16`
 - **Relógio:** tempo real
 
 O e-mail bruno.martins@jmail.com pertence a dois cadastros (clientes 11 e 43). A verificação exige dois dados e confere a combinação inteira, então o e-mail sozinho não basta e o telefone resolve para o cliente certo. O pedido 10 está confirmado há meses sem envio: o agente pede desculpas e oferece um chamado em vez de prometer prazo.
@@ -10,9 +10,9 @@ O e-mail bruno.martins@jmail.com pertence a dois cadastros (clientes 11 e 43). A
 
 **Cliente:** Boa tarde, queria saber do meu pedido. Meu e-mail é bruno.martins@jmail.com
 
-**Empório da Música:** Boa tarde! Para eu conseguir localizar o seu pedido com segurança, preciso de mais uma informação além do e-mail.   
+**Empório da Música:** Olá! Para eu conseguir localizar seu pedido com segurança, preciso de mais um dado para confirmar sua identidade (por questão de privacidade).   
   
-Você pode me informar o **número do pedido** ou o seu **telefone com DDD**?
+Poderia me informar o **número do pedido** ou o **telefone com DDD** cadastrado?
 
 **Cliente:** Meu telefone é (67) 98543-2109
 
@@ -26,31 +26,35 @@ Você pode me informar o **número do pedido** ou o seu **telefone com DDD**?
 
 </details>
 
-**Empório da Música:** Olá, Bruno! Cadastro confirmado com sucesso.  
+**Empório da Música:** Olá, Bruno! Identifiquei seu cadastro. 🎸  
   
-Seu pedido é o **#10** (1x Music Man Bass 1X Electric Bass - R$ 8.732,00 via PIX), e o status atual é **confirmado (em separação)**.  
+Localizei o seu pedido:  
+• **Pedido #10** (25/02/2026)  
+• **Item:** 1x Music Man Bass 1X Electric Bass  
+• **Valor pago:** R$ 8.732,00 (PIX)  
+• **Status:** Confirmado (em separação, ainda não enviado)  
   
-Peço sinceras desculpas pelo atraso no envio! Como o pedido está há bastante tempo aguardando expedição, posso abrir um chamado para a nossa equipe verificar o que aconteceu.   
+Peço sinceras desculpas por esse grande atraso na expedição! Como nossa loja física e atendimento humano estão fechados agora e reabrem amanhã (04/11) às 09:00, posso abrir um chamado de reclamação para a equipe priorizar e verificar o seu pedido logo no início do expediente.  
   
-Você gostaria que eu abra esse chamado para você?
+Você gostaria que eu registrasse esse chamado para você?
 
 **Cliente:** Nossa, tá demorando muito. Pode registrar uma reclamação?
 
-**Empório da Música:** Entendo perfeitamente a sua insatisfação, Bruno, e peço desculpas pelo transtorno com essa demora.   
+**Empório da Música:** Compreendo perfeitamente o seu desapontamento, Bruno. Entendo como é frustrante esperar tanto por um instrumento e peço desculpas por esse transtorno.  
   
-Antes de registrar, me confirme se posso enviar o chamado com o seguinte resumo:  
+Antes de enviar o chamado para a nossa equipe, por favor confirme se o resumo abaixo está correto:  
   
-- **Tipo:** Reclamação  
-- **Pedido:** #10 (Music Man Bass 1X Electric Bass)  
-- **Motivo:** Reclamação sobre o atraso no envio do pedido.  
+• **Tipo:** Reclamação sobre atraso no envio  
+• **Pedido:** #10 (Music Man Bass 1X Electric Bass)  
+• **Detalhes:** Pedido realizado em 25/02/2026, com pagamento de R$ 8.732,00 via PIX, que ainda consta em separação e não foi enviado. Solicitado suporte urgente e retorno da equipe.  
   
-Assim que você confirmar, abrirei o chamado e a nossa equipe entrará em contato com você em até 24 horas úteis. Posso confirmar?
+Assim que você confirmar, farei o registro e o responsável retornará em até 24 horas úteis (lembrando que a equipe reabre amanhã às 09h). Posso confirmar o envio?
 
 **Cliente:** Pode sim, obrigado
 
 <details><summary>Ferramentas consultadas: <code>open_ticket</code></summary>
 
-- `open_ticket({"order_id": 10, "kind": "reclamacao", "summary": "Reclamação sobre o atraso no envio do pedido #10 (Music Man Bass 1X Electric Bass)."})`
+- `open_ticket({"kind": "reclamacao", "order_id": 10, "summary": "Reclamação do cliente Bruno sobre o atraso no envio do pedido #10 (Music Man Bass 1X Electric Bass, realizado em 25/02/2026), que ainda consta em separação. Cliente solicita verificação urgente e retorno."})`
 
   ```json
   {"protocolo":"EMP-2026-0002","tipo":"reclamacao","retorno":"o responsável retorna em até 24 horas úteis"}
@@ -58,10 +62,9 @@ Assim que você confirmar, abrirei o chamado e a nossa equipe entrará em contat
 
 </details>
 
-**Empório da Música:** Prontinho, Bruno! Sua reclamação foi registrada com sucesso.  
+**Empório da Música:** Prontinho, Bruno! Seu chamado foi registrado com sucesso.  
   
-- **Protocolo:** EMP-2026-0002  
+• **Protocolo:** EMP-2026-0002  
+• **Prazo de retorno:** Em até 24 horas úteis (nossa equipe retorna a partir das 09:00 de amanhã).  
   
-Nossa equipe foi notificada e entrará em contato com você em até **24 horas úteis** para trazer o retorno sobre o envio do seu baixo.  
-  
-Posso te ajudar com mais alguma coisa hoje?
+Mais uma vez, pedimos desculpas pelo ocorrido. Precisa de ajuda com mais alguma coisa por hoje?

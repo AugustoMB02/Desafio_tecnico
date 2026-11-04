@@ -13,7 +13,7 @@ from . import rules
 from .data import Product, Store
 from .money import fmt_brl, round_money
 from .rules import Availability
-from .text import normalize, tokens
+from .text import compact, normalize, tokens
 
 CategorySlug = Literal[
     "guitarras",
@@ -95,16 +95,37 @@ def product_summary(store: Store, product: Product) -> dict[str, Any]:
 # --- search ------------------------------------------------------------------------------
 
 
+# Words customers use for each category, so "violao", "baixo eletrico" or "ukulele" match
+# even when the product name doesn't carry them (category names are plural, e.g. "Violões").
+_CATEGORY_WORDS = {
+    1: "guitarra guitarras eletrica", 2: "baixo baixos contrabaixo eletrico",
+    3: "bateria baterias percussao", 4: "teclado teclados piano sintetizador",
+    5: "violao violoes", 9: "ukulele ukuleles",
+}  # fmt: skip
+
+
 def _haystack(store: Store, product: Product) -> str:
-    parts = [product.name, product.description, store.categories[product.category_id].name]
+    parts = [product.name, store.categories[product.category_id].name]
+    if not rules.data_quality_issues(product):
+        parts.append(product.description)  # never index a description that names another brand
     parts += [str(v) for v in product.specs.values()]
+    parts.append(_CATEGORY_WORDS.get(product.category_id, ""))
     if product.strings == "steel":
         parts.append("aco")
+    if product.has_electronics is True:
+        parts.append("eletrico eletroacustico captacao")
+    elif product.has_electronics is False:
+        parts.append("acustico")
     return normalize(" ".join(parts))
 
 
 def _matches_query(store: Store, product: Product, query: str) -> bool:
-    """Every meaningful query word must start some word of the product text (accent-free)."""
+    """Every meaningful query word must start some word of the product text (accent-free).
+
+    A model code typed with or without hyphens/spaces ("GD-20", "C 40") also matches.
+    """
+    if len(compact(query)) >= 3 and compact(query) in compact(product.name):
+        return True
     words = _haystack(store, product).split()
     for tok in tokens(query):
         if tok in _SEARCH_STOPWORDS:
@@ -125,6 +146,7 @@ def search_catalog(
     strings: str | None = None,
     electronics: bool | None = None,
     limit: int = 5,
+    sort: str = "menor_preco",
 ) -> dict[str, Any]:
     if category is not None and category not in CATEGORY_IDS:
         return {"erro": f"categoria desconhecida; use uma de: {', '.join(CATEGORY_IDS)}"}
@@ -153,7 +175,8 @@ def search_catalog(
             matches.append(p)
         elif price.pix <= max_p:
             pix_only.append(p)
-    matches.sort(key=lambda p: (rules.price_of(store, p).current, p.product_id))
+    descending = sort == "maior_preco"
+    matches.sort(key=lambda p: (rules.price_of(store, p).current, p.product_id), reverse=descending)
 
     result: dict[str, Any] = {
         "total_encontrado": len(matches),
@@ -161,7 +184,8 @@ def search_catalog(
     }
     if len(matches) > limit:
         result["observacao"] = (
-            f"Mostrando {limit} de {len(matches)} (ordem: menor preço). Não liste tudo: "
+            f"Mostrando {limit} de {len(matches)} (ordem: {'maior' if descending else 'menor'} "
+            "preço). Não liste tudo: "
             "pergunte o que o cliente prefere para refinar."
         )
     if pix_only:
@@ -241,9 +265,9 @@ def get_product(store: Store, product: str | int) -> dict[str, Any]:
     if not found:
         return {"erro": "nenhum produto com esse nome no catálogo"}
     top_score = found[0][0]
-    best = [p for s, p in found if s == top_score]
-    if top_score >= 1 and len(best) == 1:
-        return product_details(store, best[0])
+    strong = [p for score, p in found if score >= 1]  # the query is contained in the name
+    if len(strong) == 1:
+        return product_details(store, strong[0])
     candidates = [
         {
             "id": p.product_id,
@@ -276,8 +300,12 @@ def quote(
     lines, errors = [], []
     total = total_pix = Decimal("0.00")
     special = False
+    merged: dict[int, int] = {}  # the same product in two lines counts once against stock
     for item in items:
-        pid, qty = int(item.get("product_id", 0)), int(item.get("quantity", 1) or 1)
+        pid = int(item.get("product_id", 0))
+        qty = item.get("quantity", 1)
+        merged[pid] = merged.get(pid, 0) + int(1 if qty is None else qty)
+    for pid, qty in merged.items():
         product = store.products.get(pid)
         if product is None:
             errors.append(f"produto {pid} não existe")
@@ -325,7 +353,11 @@ def quote(
     result["parcelamento_maximo"] = (
         f"{n_max}x de {fmt_brl(rules.installment_value(total, n_max))} sem juros"
     )
-    if installments is not None:
+    if installments is not None and payment in ("pix", "debito", "boleto"):
+        result["parcelamento_pedido"] = (
+            f"não se aplica: {payment} é pagamento à vista; parcelamento só no cartão de crédito"
+        )
+    elif installments is not None:
         n = int(installments)
         if rules.installment_allowed(total, n):
             result["parcelamento_pedido"] = (
@@ -344,12 +376,17 @@ def quote(
             "na parte combinada não está definido na política: a equipe confirma"
         )
 
+    city = city.strip() if city and city.strip() else None
+
     def ship(amount: Decimal) -> str:
         if city is None:
             return "depende da cidade: pergunte a cidade (Campo Grande tem regra própria)"
         s = rules.shipping_for(amount, city, special)
         if s.fee is None:
-            text = "calculado pelo CEP de destino (Correios PAC/SEDEX ou Jadlog); peça o CEP"
+            text = (
+                "calculado pelo CEP de destino na finalização da compra (Correios PAC/SEDEX ou "
+                "Jadlog); este atendimento não calcula esse valor — não prometa calcular"
+            )
             if s.special_freight:
                 text += "; instrumento de grande porte pode exigir frete especial com cotação"
             return text

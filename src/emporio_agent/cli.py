@@ -76,11 +76,31 @@ class Session:
         self.turns: list[Turn] = []
 
     def send(self, text: str) -> Turn:
-        before = len(self.app.get_state(self.config).values.get("messages", []))
-        state = self.app.invoke({"messages": [HumanMessage(text)]}, self.config)
+        snapshot = self.app.get_state(self.config)
+        before = len(snapshot.values.get("messages", []))
+        try:
+            state = self.app.invoke({"messages": [HumanMessage(text)]}, self.config)
+        except Exception:
+            self._roll_back(snapshot)
+            raise
+        thread = self.config["configurable"]["thread_id"]
+        self.config = {"configurable": {"thread_id": thread}}  # follow the newest checkpoint
         turn = collect_turn(text, state["messages"][before + 1 :])
         self.turns.append(turn)
         return turn
+
+    def _roll_back(self, snapshot: Any) -> None:
+        """After a failed turn, continue from the last complete state.
+
+        A failure after the tools ran would otherwise leave the user message, the tool call and
+        its result in the thread without a reply, which providers reject on the next turn. The
+        next message forks from the checkpoint taken before the failed one.
+        """
+        checkpoint = snapshot.config.get("configurable", {})
+        if checkpoint.get("checkpoint_id"):
+            self.config = {"configurable": dict(checkpoint)}
+        else:  # the conversation had nothing yet: start a fresh thread
+            self.config = {"configurable": {"thread_id": uuid.uuid4().hex}}
 
 
 def describe_error(exc: BaseException) -> str:
@@ -160,9 +180,15 @@ def transcript_markdown(
 
 
 def load_script(path: Path) -> dict[str, Any]:
-    data = yaml.safe_load(path.read_text(encoding="utf-8"))
-    if not isinstance(data, dict) or not data.get("turns"):
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError) as exc:
+        raise SystemExit(f"{path}: não foi possível ler o roteiro ({exc})") from exc
+    turns = data.get("turns") if isinstance(data, dict) else None
+    if not isinstance(turns, list) or not turns:
         raise SystemExit(f"{path}: o roteiro precisa de uma lista 'turns'")
+    if not all(isinstance(t, str) and t.strip() for t in turns):
+        raise SystemExit(f"{path}: cada item de 'turns' precisa ser um texto não vazio")
     return data
 
 
@@ -192,6 +218,9 @@ def main(argv: list[str] | None = None) -> int:
         session, model_name, clock = build_session(args.model, now)
     except ModelConfigError as exc:
         print(f"Erro de configuração: {exc}", file=sys.stderr)
+        return 2
+    except ValueError as exc:  # e.g. --now in an unknown format
+        print(f"Erro de configuração: data inválida em --now/NOW ({exc})", file=sys.stderr)
         return 2
 
     print(BANNER + "\n")

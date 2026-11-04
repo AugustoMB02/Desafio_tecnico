@@ -1,5 +1,7 @@
 # Plan Review — `PLAN.md`
 
+> **Status note:** a point-in-time review of [`PLAN.md`](PLAN.md) (commit `e563d6b`), kept as written. Which recommendations were adopted, and why, is in the README table *O que mudou do plano para a implementação*.
+
 Review of `PLAN.md` and `scripts/explore_data.py` as of commit `e563d6b`, written 2026-11-03.
 
 Every number below was re-derived from the raw CSVs and the policy PDF text. Model facts come from the current Claude API documentation, and the citations were spot-checked on the web (see §8). Where I could not verify something, I say so.

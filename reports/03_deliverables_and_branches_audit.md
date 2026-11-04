@@ -17,7 +17,7 @@
 | **D-04** | **MEDIUM** | `origin/feat/persistencia-e-web` (`web.py` + `tickets.py`) | Race condition across Gradio tabs: `factory()` creates a separate `TicketStore()` (with a private instance `threading.Lock()`) per tab, allowing concurrent `open_ticket` calls to mint **duplicate `EMP-2026-NNNN` protocols** in `.state/tickets.jsonl`. Also reloads CSVs/LLM per tab. |
 | **D-05** | **MEDIUM** | `cli.py` + `origin/feat/persistencia-sqlite` (`persistence.py`) | Mid-turn LLM failure after tool execution checkpoints dangling `['HumanMessage', 'AIMessage', 'ToolMessage']` permanently into `.state/conversas.sqlite`, breaking resumed `--session` runs. |
 | **D-06** | **MEDIUM** | `origin/feat/web-ui-gradio` (`web.py`, `persistence.py`) | Gradio Web UI state & security flaws: (1) Retry/Undo (`fresh=not history`) wipes verified state on Turn 1 or desyncs LangGraph state from UI on Turn 2+; (2) `session_hash` fallback `"local"` collides for stateless API callers; (3) no per-`Session` lock around `session.send()` and unbounded `_sessions` dict RAM leak; (4) unclosed `sqlite3.Connection`; (5) `gradio` added as mandatory core dependency (+34 packages). |
-| **D-07** | **MEDIUM** | [`HANDOFF.md`](../HANDOFF.md#L39-L97) on `main` | Internal contradictions: §2 (`L39`) claims *"no application code"* exists while §4 (`L93`) says *"Done"*; §4 (`L96`) falsely states *"`main` does not have this work yet"*; §4 (`L95`) cites `162 tests` for `feat/persistencia-e-web` (actual: `167`). |
+| **D-07** | **MEDIUM** | [`HANDOFF.md`](../docs/HANDOFF.md#L39-L97) on `main` | Internal contradictions: §2 (`L39`) claims *"no application code"* exists while §4 (`L93`) says *"Done"*; §4 (`L96`) falsely states *"`main` does not have this work yet"*; §4 (`L95`) cites `162 tests` for `feat/persistencia-e-web` (actual: `167`). |
 | **D-08** | **MEDIUM** | [`AI_USAGE.md`](../AI_USAGE.md#L23-L69) on `main` | Contains 4 non-portable `file:///home/augusto/Desktop/Desafio_tecnico/...` URLs (`L23`, `L28`, `L39`, `L69`) that render as dead links on GitHub and leak local filesystem paths. |
 | **D-09** | **LOW** | [`pyproject.toml`](../pyproject.toml#L25), [`.env.example`](../.env.example#L12-L16), [`scripts/`](../scripts/) | `uv_build>=0.11.32,<0.12.0` emits a warning on `uv 0.13.7`; no static type checker configured despite `# type: ignore[misc]` and `.mypy_cache/`; `.env.example` lists uninstalled OpenAI/AWS variables; stale path comments in `scripts/`; `fts5_policy_probe.py` requires system `pdftotext`. |
 | **D-10** | **LOW** | Feature Branch Docs (`README.md`, `HANDOFF.md`, `CLAUDE.md`) | On `feat/web-ui-gradio` & `feat/persistencia-e-web`, `README.md` says *"Uma UI web ficou para depois"* right above *"acrescentei um chat web"*; adjacent `167` vs `162` test counts in `HANDOFF.md`; stale `158 testes` on single-feature branches; `CLAUDE.md` omits `persistence.py` / `--session`. |
@@ -42,7 +42,7 @@
 - **Secrets & Runtime PII Scan (PASS):** Scanned all reachable git objects (`git rev-list --all --objects`) and patch history (`git log --all -p`) across all local and remote branches for `AIza*`, `AQ.*`, `sk-ant-*`, `sk-*`, `AKIA*`, `.env`, `.state/`, `.sqlite`, and `.jsonl`. **Zero secrets, `.env` files, or customer PII files were ever committed.**
 - **Minor Commit History Notes:**
   - Merge commit `9d5b635` (`Merge pull request #1 from AugustoMB02/claude/emporio-agent-handoff-5gfkz8`) auto-copied its body from the first commit on the branch (`fix(scripts): resolve EDA data path relative to the repo`), understating that PR #1 merged the entire implementation.
-  - Commits `52b0d87..e602a39` are authored as `Claude <noreply@anthropic.com>` with `Claude-Session:` trailers, matching the transparent narrative in `README.md` and `AI_USAGE_LOG.md`.
+  - Commits `52b0d87..e602a39` are authored as `Claude <noreply@anthropic.com>` with `Claude-Session:` trailers, matching the transparent narrative in `README.md` and `AI_USAGE.md`.
 
 ---
 
@@ -61,7 +61,7 @@
   4. **Contradiction with `README.md:247`:** `README.md` explicitly cites this exact failure mode as solved (`"afirmava a previsão de entrega como data de recebimento... A correção foi nas ferramentas e no prompt (commit 2d65a27)... Os exemplos foram gerados de novo"`), yet all 5 files in `examples/` were generated at commit `b65c638` (also predating `16da6fe`'s `quote`/`prompts` fixes) and still contain the defect in `examples/03_arrependimento_devolucao.md`.
 
 ### [D-07 — MEDIUM] Stale & Self-Contradictory Statements in `HANDOFF.md` on `main`
-- **Locations:** [`HANDOFF.md`](../HANDOFF.md#L39) and [`HANDOFF.md`](../HANDOFF.md#L93-L96).
+- **Locations:** [`HANDOFF.md`](../docs/HANDOFF.md#L39) and [`HANDOFF.md`](../docs/HANDOFF.md#L93-L96).
 - **Evidence:**
   1. Line 39 states in the present tense: *"Nothing else exists yet: no application code, no `pyproject.toml`, no tests, no `examples/`, and `README.md` is a one-line stub"*, directly contradicting §4 (`L93`: *"Done: every step of §5. 158 unit tests pass"*).
   2. Line 96 states *"`main` does not have this work yet"*, even though `HANDOFF.md` is now on `main` (`9d5b635`).
@@ -69,7 +69,7 @@
 
 ### [D-08 — MEDIUM] Broken / Non-Portable `file://` URLs in `AI_USAGE.md`
 - **Locations:** [`AI_USAGE.md`](../AI_USAGE.md#L23), [`L28`](../AI_USAGE.md#L28), [`L39`](../AI_USAGE.md#L39), and [`L69`](../AI_USAGE.md#L69) (linked directly from [`README.md`](../README.md#L240)).
-- **Evidence:** Four Markdown links use `file:///home/augusto/Desktop/Desafio_tecnico/...` instead of relative repository paths (`CLAUDE.md`, `scripts/explore_data.py`, `PLAN.md`). GitHub strips `file://` URLs as non-clickable text while exposing the local machine path. (All other links across `README.md`, `CLAUDE.md`, `PLAN.md`, `Plan_Review.md`, `AI_USAGE_LOG.md`, `examples/*.md`, and `evals/*.md` were verified valid.)
+- **Evidence:** Four Markdown links use `file:///home/augusto/Desktop/Desafio_tecnico/...` instead of relative repository paths (`CLAUDE.md`, `scripts/explore_data.py`, `PLAN.md`). GitHub strips `file://` URLs as non-clickable text while exposing the local machine path. (All other links across `README.md`, `CLAUDE.md`, `PLAN.md`, `Plan_Review.md`, `AI_USAGE.md`, `examples/*.md`, and `evals/*.md` were verified valid.)
 
 ### [D-11b — LOW] False Capability Offer (CEP Calculation) in `evals/report_dificeis.md`
 - **Locations:** [`evals/report_dificeis.md`](../evals/report_dificeis.md#L20) and [`L100`](../evals/report_dificeis.md#L100).

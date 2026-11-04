@@ -1,8 +1,8 @@
 # Exemplo 2 — Preço do Takamine GD20, promoção encerrada e acessórios
 
 - **Modelo:** `google_genai:gemini-3.5-flash`
-- **Gerado em:** 03/11/2026 15:27 (horário de Campo Grande/MS)
-- **Commit:** `b65c638`
+- **Gerado em:** 03/11/2026 21:12 (horário de Campo Grande/MS)
+- **Commit:** `f1ebc16`
 - **Relógio:** tempo real
 
 Consulta de preço com regra de promoção (seção 7.3: a promoção de 12% está encerrada no sistema, então o agente informa com transparência e não aplica o desconto) e pedido de acessórios fora do escopo da loja (seção 1), sem indicar loja parceira.
@@ -20,24 +20,28 @@ Consulta de preço com regra de promoção (seção 7.3: a promoção de 12% est
 
 </details>
 
-**Empório da Música:** O violão **Takamine GD20 Dreadnought Natural** está custando **R$ 2.199,00**.   
+**Empório da Música:** O violão *Takamine GD20 Dreadnought Natural* está disponível por aqui! 🎸  
   
-As formas de pagamento são:  
-- **PIX:** R$ 2.089,05 (com 5% de desconto)  
-- **Cartão:** até 12x de R$ 183,25 sem juros  
+• **Preço:** R$ 2.199,00    
+• **No PIX:** R$ 2.089,05 (com 5% de desconto)    
+• **Parcelado:** até 12x de R$ 183,25 sem juros    
   
-Temos 5 unidades disponíveis no estoque no momento. Precisa de mais alguma informação sobre ele?
+Se quiser, posso calcular o frete para a sua cidade. Quer dar uma olhada nas condições ou precisa de mais alguma informação sobre ele?  
+  
+*(Aviso: nossa loja física está fechada agora e a equipe humana volta amanhã, quarta-feira, às 09:00).*
 
 **Cliente:** Mas eu vi que ele tava com 12% de desconto, ainda tá valendo?
 
-**Empório da Música:** Essa promoção de 12% de desconto infelizmente já encerrou.   
+**Empório da Música:** A oferta especial de 12% de desconto já se encerrou.   
   
-No momento, o valor dele é R$ 2.199,00, mas você ainda garante 5% de desconto pagando no PIX, saindo por R$ 2.089,05!  
+No momento, o valor atual do Takamine GD20 é **R$ 2.199,00**, mas você ainda garante **5% de desconto no PIX**, saindo por **R$ 2.089,05**, ou em até **12x de R$ 183,25 sem juros** no cartão.  
   
-Posso te ajudar com mais alguma dúvida ou calcular o frete para você?
+Posso te ajudar com mais alguma dúvida sobre ele?
 
 **Cliente:** Entendi. Aproveitando, vocês vendem as cordas e um amplificador pra ele?
 
-**Empório da Música:** Nós trabalhamos exclusivamente com instrumentos musicais aqui na Empório da Música, por isso não vendemos acessórios como cordas nem amplificadores.   
+**Empório da Música:** Não vendemos cordas nem amplificadores por aqui. Trabalhamos **exclusivamente com instrumentos musicais**, então não comercializamos acessórios ou equipamentos externos.   
   
-Se precisar de ajuda para escolher outro modelo de violão ou algum outro instrumento, estou à disposição!
+Inclusive, vale lembrar que o **Takamine GD20** é um modelo puramente acústico (não possui captação eletrônica). Se você estiver procurando um violão para ligar no som, posso te mostrar opções de violões eletroacústicos disponíveis no nosso catálogo!  
+  
+Precisa de ajuda com mais alguma coisa?

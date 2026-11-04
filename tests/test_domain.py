@@ -1,4 +1,4 @@
-"""Domain rules, pinned to the values re-derived in Plan_Review.md §2–§3."""
+"""Domain rules, pinned to the values re-derived in docs/Plan_Review.md §2–§3."""
 
 from decimal import Decimal
 

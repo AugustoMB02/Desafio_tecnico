@@ -1,6 +1,6 @@
-"""Reproduce Plan_Review.md §3.2: SQLite FTS5/BM25 over the policy manual's sections.
+"""Reproduce docs/Plan_Review.md §3.2: SQLite FTS5/BM25 over the policy manual's sections.
 
-Builds the index PLAN.md proposes (one row per top-level section §1-§10,
+Builds the index docs/PLAN.md proposes (one row per top-level section §1-§10,
 tokenizer `unicode61 remove_diacritics 2`, BM25 ranking) and runs the brief's
 own scenario question against it.
 

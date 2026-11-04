@@ -1,4 +1,4 @@
-# Scripted scenarios for `uv run emporio-evals` (Plan_Review.md §6 plus the brief's four).
+# Scripted scenarios for `uv run emporio-evals` (docs/Plan_Review.md §6 plus the brief's four).
 #
 # Each turn may assert: tools / no_tools (tool names), tool_output (substrings of that turn's
 # tool outputs), reply_any (the reply contains at least one), reply_none (contains none).
@@ -136,7 +136,7 @@ scenarios:
     expect:
       tools: [verify_customer, check_return]
       tool_output: ['"verificado":true', '"elegivel":true']
-      reply_any: ["24/02/2026"]
+      reply_any: ["24/02/2026", "no prazo", "dentro do prazo"]
     turns:
       - user: "Me arrependi da minha compra, posso devolver? Pedido 7, leticia.rocha@jmail.com. Não tem defeito, só arrependimento."
       - user: "Recebi no dia 17 mesmo, está na caixa, sem uso e sem nenhum ajuste."

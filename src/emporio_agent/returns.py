@@ -21,11 +21,15 @@ from .money import fmt_date
 ReturnReason = Literal["arrependimento", "defeito", "preferencia"]
 
 REGRET_DAYS = 7  # §4.1
+# ASSUMPTION: a customer-supplied receipt date more than this many days after the recorded
+# delivery forecast needs the team to confirm it with the carrier (tracking) before any
+# deadline is computed from it; otherwise a typed date could reopen a 10-month-old order.
+RECEIPT_TOLERANCE_DAYS = 10
 PREFERENCE_DAYS = 7  # §4.3
 DEFECT_EXCHANGE_DAYS = 30  # §4.2, from purchase
 LEGAL_WARRANTY_DAYS = 90  # §8.1, from receipt
 
-NOT_ELIGIBLE_ITEMS = [  # §4.4: confirm with the customer, the data cannot tell
+NOT_ELIGIBLE_ITEMS = [  # §4.4 (exchanges only): confirm with the customer
     "instrumento com personalização ou ajuste sob encomenda (setup, regulagem especial)",
     'compra em liquidação com aviso explícito de "venda final"',
 ]
@@ -78,6 +82,26 @@ def check_return(
             )
         return result
 
+    late_limit = (
+        order.estimated_delivery + timedelta(days=RECEIPT_TOLERANCE_DAYS)
+        if order.estimated_delivery
+        else None
+    )
+    if received_on is not None and late_limit is not None and received_on > late_limit:
+        result.update(
+            elegivel=None,
+            situacao=(
+                f"a data de recebimento informada ({fmt_date(received_on)}) fica muito "
+                f"depois da previsão registrada ({fmt_date(order.estimated_delivery)}); "
+                "a equipe precisa confirmar a entrega pelo rastreio antes de aplicar prazos"
+            ),
+            proximo_passo=(
+                "explicar com transparência e, se o cliente confirmar, abrir chamado para a "
+                "equipe verificar a entrega; não prometer devolução"
+            ),
+        )
+        return result
+
     receipt = received_on or order.estimated_delivery
     if receipt is None:
         result.update(elegivel=None, situacao="sem data de recebimento: pergunte ao cliente")
@@ -108,7 +132,8 @@ def check_return(
                     "reembolso na mesma forma de pagamento em até 10 dias úteis",
                     "frete de devolução por conta da loja",
                 ],
-                verificar_com_cliente=NOT_ELIGIBLE_ITEMS,
+                # §4.4 lists items not eligible for *exchange*; the online regret right (§4.1,
+                # CDC art. 49) has no such exception, so it is not applied here.
                 proximo_passo="confirmar com o cliente e abrir chamado do tipo 'devolucao'",
             )
         else:

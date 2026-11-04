@@ -1,5 +1,7 @@
 # Report 00 — Executive QA & Red-Team Audit Summary
 
+> **Status (added after the audit):** these reports describe `main` at `9d5b635`, before the fixes. Every finding and what was done about it is in [`04_resposta_ao_qa.md`](04_resposta_ao_qa.md).
+
 - **Repository:** `https://github.com/AugustoMB02/Desafio_tecnico`
 - **Audited Commit:** `9d5b635` (`main`) + unmerged branches `origin/feat/persistencia-sqlite`, `origin/feat/web-ui-gradio`, `origin/feat/persistencia-e-web`
 - **Audit Scope:** Static line-by-line review of all 16 source modules & 8 test files + **89 live `google_genai:gemini-3.5-flash` turns** (42 adversarial conversations, 12 `Pass^3` trials, 6 CLI subprocess probes) + full deliverables & GitHub audit.
@@ -59,7 +61,7 @@ However, our multi-agent audit uncovered **3 submission-blocking deliverable def
 - **Evaluation Checker Blind Spots (`H-09`, `H-10`, `M-10`):** `_MONEY` misses Markdown-bolded prices (`R$ **1.999,00**`) and `"1.850 reais"`, false-fails `"R$ 1,5 mil"` as `Decimal('1')`, and lets customer haggling numbers (`"faz por 1800?"`) ground hallucinated discounts (`"Fechado por R$ 1.800,00!"`). `emporio-evals --only <typo>` exits `0` (`0/0`) while overwriting `--report`.
 - **Cross-Provider & Latency Config (`H-07`, `L-LOW-01`):** `MODEL_EFFORT=low` breaks `anthropic:claude-haiku-5-5` with HTTP 400 (`llm.py:48`), while being ignored for Gemini (`timeout=None`, `p90 = 12.87s`).
 - **CLI & Temporal Polish (`H-06`, `M-09`, `L-MED-06`):** `--now invalid-date` and malformed `--script` YAMLs crash with raw tracebacks; `turns: "Oi"` calls the LLM once per character; `--now` between `order_date` and `estimated_delivery` causes `check_return` to reject its own database ETA (`RT-30`).
-- **Documentation Cleanup (`D-07`, `D-08`, `D-09`):** [`HANDOFF.md`](../HANDOFF.md#L39-L97) on `main` contradicts itself (*"no application code"* vs *"Done"*; *"`main` does not have this work yet"*); [`AI_USAGE.md`](../AI_USAGE.md#L23-L69) has 4 broken `file:///home/augusto/...` URLs; [`pyproject.toml`](../pyproject.toml#L25) `uv_build<0.12.0` warns on `uv 0.13.7`.
+- **Documentation Cleanup (`D-07`, `D-08`, `D-09`):** [`HANDOFF.md`](../docs/HANDOFF.md#L39-L97) on `main` contradicts itself (*"no application code"* vs *"Done"*; *"`main` does not have this work yet"*); [`AI_USAGE.md`](../AI_USAGE.md#L23-L69) has 4 broken `file:///home/augusto/...` URLs; [`pyproject.toml`](../pyproject.toml#L25) `uv_build<0.12.0` warns on `uv 0.13.7`.
 
 ---
 
