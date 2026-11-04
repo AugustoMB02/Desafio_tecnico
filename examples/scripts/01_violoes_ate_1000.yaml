@@ -1,8 +1,9 @@
 title: "Exemplo 1 — Violões até R$ 1.000 e parcelamento"
+now: "2026-03-24T10:30:00-04:00"
 notes: >
-  Consulta ao catálogo em tempo real: só itens ativos e com estoque (o Giannini GF-3D, sem
-  estoque, e o Shelby SN-7C, descontinuado, ficam de fora), refinamento por tipo de corda,
-  parcelamento pelas faixas da seção 3.1 e frete de Campo Grande.
+  Terça-feira, 10h30, loja aberta. Consulta ao catálogo em tempo real: só itens ativos e com
+  estoque (o Giannini GF-3D, sem estoque, e o Shelby SN-7C, descontinuado, ficam de fora),
+  refinamento por tipo de corda, parcelamento pelas faixas da seção 3.1 e frete de Campo Grande.
 turns:
   - "Oi! Quais opções de violões disponíveis custando até R$1000?"
   - "Sou iniciante, prefiro corda de nylon"

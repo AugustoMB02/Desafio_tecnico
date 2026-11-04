@@ -1,8 +1,11 @@
 title: "Exemplo 2 — Preço do Takamine GD20, promoção encerrada e acessórios"
+now: "2026-03-21T15:00:00-04:00"
 notes: >
-  Consulta de preço com regra de promoção (seção 7.3: a promoção de 12% está encerrada no
-  sistema, então o agente informa com transparência e não aplica o desconto) e pedido de
-  acessórios fora do escopo da loja (seção 1), sem indicar loja parceira.
+  Sábado, 15h, depois do fechamento (sábado a loja abre das 9h às 13h): o agente atende
+  normalmente e avisa quando a equipe volta, como pede a seção 7.1. Consulta de preço com regra
+  de promoção (seção 7.3: a promoção de 12% está encerrada no sistema, então o agente informa
+  com transparência e não aplica o desconto) e pedido de acessórios fora do escopo da loja
+  (seção 1), sem indicar loja parceira.
 turns:
   - "Quanto custa o Takamine GD20?"
   - "Mas eu vi que ele tava com 12% de desconto, ainda tá valendo?"

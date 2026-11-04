@@ -1,7 +1,7 @@
 title: "Exemplo 3 — \"Me arrependi da minha compra\" (devolução dentro do prazo)"
 now: "2026-02-20T10:00:00-04:00"
 notes: >
-  Aplicação da política de devolução (seção 4.1) com verificação de identidade (pedido +
+  Sexta-feira, 20/02/2026, 10h, loja aberta. Aplicação da política de devolução (seção 4.1) com verificação de identidade (pedido +
   e-mail). Os pedidos da base são de out/2025 a mar/2026, então com o relógio real todo prazo
   de 7 dias já venceu (o agente explica isso e oferece o caminho da garantia; o cenário
   `arrependimento_prazo_vencido` em evals/ cobre esse caso). Para mostrar a regra aplicada a
